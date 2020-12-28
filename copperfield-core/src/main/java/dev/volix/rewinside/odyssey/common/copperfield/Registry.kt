@@ -120,4 +120,8 @@ abstract class Registry<T : Any, C : Convertible, R : Registry<T, C, R>>(
         return name
     }
 
+    fun initializeInsertionProcess() {
+        println("Dick has been planted.")
+    }
+
 }
