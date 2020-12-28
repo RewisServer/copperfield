@@ -1,19 +1,26 @@
 package dev.volix.rewinside.odyssey.common.copperfield.protobuf
 
-import com.google.protobuf.Message
-import dev.volix.rewinside.odyssey.common.copperfield.Convertible
+import com.google.protobuf.GeneratedMessageV3
+import dev.volix.rewinside.odyssey.common.copperfield.convertFrom
+import dev.volix.rewinside.odyssey.common.copperfield.convertTo
 
 /**
  * @author Benedikt Wüller
  */
-interface ProtoConvertible<T : Message> : Convertible<T> {
+interface ProtoConvertible<T : GeneratedMessageV3> {
 
-    fun toProtoMessage(registry: ProtoRegistry): T {
-        TODO()
+    @JvmDefault
+    fun toProtoMessage(type: Class<T>, registry: ProtoRegistry): T {
+        val newBuilderMethod = type.getDeclaredMethod("newBuilder")
+        val builder = newBuilderMethod.invoke(null) as GeneratedMessageV3.Builder<*>
+        convertTo(this, builder, registry)
+        val buildMethod = builder.javaClass.getDeclaredMethod("build")
+        return buildMethod.invoke(builder) as T
     }
 
+    @JvmDefault
     fun fromProtoMessage(source: T, registry: ProtoRegistry) {
-        TODO()
+        convertFrom(this, source, registry)
     }
 
 }

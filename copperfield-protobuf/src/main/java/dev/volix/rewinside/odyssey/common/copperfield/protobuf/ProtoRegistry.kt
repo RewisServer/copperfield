@@ -1,19 +1,20 @@
 package dev.volix.rewinside.odyssey.common.copperfield.protobuf
 
-import com.google.protobuf.GeneratedMessageV3
+import com.google.protobuf.MessageOrBuilder
 import dev.volix.rewinside.odyssey.common.copperfield.ConverterRegistry
 import dev.volix.rewinside.odyssey.common.copperfield.protobuf.converter.ProtoReflectionConverter
 
 /**
  * @author Benedikt Wüller
  */
-class ProtoRegistry : ConverterRegistry<GeneratedMessageV3.Builder<*>>() {
+class ProtoRegistry : ConverterRegistry<MessageOrBuilder>() {
 
     // TODO
     //  - ByteString (bytes)
     //  - list
     //  - date
     //  - convertible
+    //  - uuid
 
     init {
         // Register default converters.

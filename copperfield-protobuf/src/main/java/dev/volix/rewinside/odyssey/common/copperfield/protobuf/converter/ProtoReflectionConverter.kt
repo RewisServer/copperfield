@@ -1,15 +1,16 @@
 package dev.volix.rewinside.odyssey.common.copperfield.protobuf.converter
 
-import com.google.protobuf.GeneratedMessageV3
+import com.google.protobuf.MessageOrBuilder
 import dev.volix.rewinside.odyssey.common.copperfield.converter.ReflectionConverter
+import dev.volix.rewinside.odyssey.common.copperfield.snakeToPascalCase
 
 /**
  * @author Benedikt Wüller
  */
-open class ProtoReflectionConverter<T : Any>(type: Class<T>) : ReflectionConverter<GeneratedMessageV3.Builder<*>, T>(type), ProtoConverter<T> {
+open class ProtoReflectionConverter<T : Any>(type: Class<T>) : ReflectionConverter<MessageOrBuilder, T>(type), ProtoConverter<T> {
 
-    override fun getGetterMethodName(name: String) = "get${name.capitalize()}"
+    override fun getGetterMethodName(name: String) = "get${name.snakeToPascalCase()}"
 
-    override fun getSetterMethodName(name: String) = "set${name.capitalize()}"
+    override fun getSetterMethodName(name: String) = "set${name.snakeToPascalCase()}"
 
 }

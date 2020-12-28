@@ -1,35 +1,24 @@
 package dev.volix.rewinside.odyssey.common.copperfield.bson
 
-import dev.volix.rewinside.odyssey.common.copperfield.Convertible
+import dev.volix.rewinside.odyssey.common.copperfield.convertFrom
+import dev.volix.rewinside.odyssey.common.copperfield.convertTo
 import org.bson.Document
 
 /**
  * @author Benedikt Wüller
  */
-interface BsonConvertible : Convertible<Document> {
+interface BsonConvertible {
 
     @JvmDefault
     fun toBsonDocument(registry: BsonRegistry): Document {
         val document = Document()
-        val fields = this.findFields(registry)
-        fields.forEach {
-            val converter = it.converter
-            val name = it.name
-            val value = it.field.get(this)
-            converter.convertTo(name, value, document)
-        }
+        convertTo(this, document, registry)
         return document
     }
 
     @JvmDefault
     fun fromBsonDocument(source: Document, registry: BsonRegistry) {
-        val fields = this.findFields(registry)
-        fields.forEach {
-            val converter = it.converter
-            val name = it.name
-            val value = converter.convertFrom(name, source)
-            it.field.set(this, value)
-        }
+        convertFrom(this, source, registry)
     }
 
 }

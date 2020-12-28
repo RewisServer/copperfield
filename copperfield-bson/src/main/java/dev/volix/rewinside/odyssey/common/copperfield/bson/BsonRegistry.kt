@@ -20,6 +20,7 @@ class BsonRegistry : ConverterRegistry<Document>() {
     //  - ByteString (bytes)
     //  - list
     //  - convertible
+    //  - uuid
 
     init {
         // Register default converters.

@@ -17,7 +17,7 @@ abstract class ReflectionConverter<S : Any, T : Any>(protected val type: Class<T
     }
 
     private fun getGetterMethod(name: String, type: Class<S>) = this.getterCache.getOrPut(name) {
-        type.getDeclaredMethod(this.getGetterMethodName(name), this.type)
+        type.getDeclaredMethod(this.getGetterMethodName(name))
     }
 
     private fun getSetterMethod(name: String, type: Class<S>) = this.setterCache.getOrPut(name) {
