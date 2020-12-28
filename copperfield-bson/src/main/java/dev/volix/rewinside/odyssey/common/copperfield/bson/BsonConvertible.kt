@@ -12,13 +12,13 @@ interface BsonConvertible {
     @JvmDefault
     fun toBsonDocument(registry: BsonRegistry): Document {
         val document = Document()
-        convertTo(this, document, registry)
+        convertTo(this, document, registry, BsonFieldNameMapper, BsonFieldFilter)
         return document
     }
 
     @JvmDefault
     fun fromBsonDocument(source: Document, registry: BsonRegistry) {
-        convertFrom(this, source, registry)
+        convertFrom(this, source, registry, BsonFieldNameMapper, BsonFieldFilter)
     }
 
 }

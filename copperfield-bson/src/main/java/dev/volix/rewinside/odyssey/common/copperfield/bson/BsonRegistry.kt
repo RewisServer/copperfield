@@ -24,13 +24,23 @@ class BsonRegistry : ConverterRegistry<Document>() {
 
     init {
         // Register default converters.
+        this.registerConverter(Int::class.java, IntBsonConverter())
         this.registerConverter(Int::class.javaObjectType, IntBsonConverter())
+
+        this.registerConverter(Long::class.java, LongBsonConverter())
         this.registerConverter(Long::class.javaObjectType, LongBsonConverter())
+
+        this.registerConverter(Double::class.java, DoubleBsonConverter())
         this.registerConverter(Double::class.javaObjectType, DoubleBsonConverter())
+
+        this.registerConverter(Float::class.java, FloatBsonConverter())
         this.registerConverter(Float::class.javaObjectType, FloatBsonConverter())
+
+        this.registerConverter(Boolean::class.java, BooleanBsonConverter())
         this.registerConverter(Boolean::class.javaObjectType, BooleanBsonConverter())
-        this.registerConverter(String::class.javaObjectType, StringBsonConverter())
-        this.registerConverter(Date::class.javaObjectType, DateBsonConverter())
+
+        this.registerConverter(String::class.java, StringBsonConverter())
+        this.registerConverter(Date::class.java, DateBsonConverter())
     }
 
 }

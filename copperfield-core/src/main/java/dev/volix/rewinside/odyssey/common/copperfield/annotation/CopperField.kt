@@ -1,4 +1,4 @@
-package dev.volix.rewinside.odyssey.common.copperfield
+package dev.volix.rewinside.odyssey.common.copperfield.annotation
 
 /**
  * @author Benedikt Wüller

@@ -1,8 +1,8 @@
 package dev.volix.rewinside.odyssey.common.copperfield
 
+import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperField
 import dev.volix.rewinside.odyssey.common.copperfield.converter.Converter
 import dev.volix.rewinside.odyssey.common.copperfield.exception.NoMatchingConverterException
-import dev.volix.rewinside.odyssey.common.copperfield.exception.PrimitiveTypeException
 
 /**
  * @author Benedikt Wüller
@@ -19,7 +19,7 @@ fun <T : Any> findFields(obj: Any, registry: ConverterRegistry<T>): List<CopperF
             val name = annotation.name
             val type = field.type
 
-            if (type.isPrimitive) throw PrimitiveTypeException(name, type)
+            //if (type.isPrimitive) throw PrimitiveTypeException(name, type)
             val converter = registry.findConverter(type) ?: throw NoMatchingConverterException(name, obj.javaClass)
 
             field.isAccessible = true
@@ -27,21 +27,21 @@ fun <T : Any> findFields(obj: Any, registry: ConverterRegistry<T>): List<CopperF
         }.toList()
 }
 
-fun <T : Any> convertTo(instance: Any, target: T, registry: ConverterRegistry<T>) {
+fun <T : Any> convertTo(instance: Any, target: T, registry: ConverterRegistry<T>, nameMapper: FieldNameMapper<*>, filter: FieldFilter<*>) {
     val fields = findFields(instance, registry)
-    fields.forEach {
+    fields.filter { filter.filterSerialize(it.field) }.forEach {
         val converter = it.converter
-        val name = it.name
+        val name = nameMapper.map(it.field, it.name)
         val value = it.field.get(instance)
         converter.convertTo(name, value, target)
     }
 }
 
-fun <T : Any> convertFrom(instance: Any, source: T, registry: ConverterRegistry<T>) {
+fun <T : Any> convertFrom(instance: Any, source: T, registry: ConverterRegistry<T>, nameMapper: FieldNameMapper<*>, filter: FieldFilter<*>) {
     val fields = findFields(instance, registry)
-    fields.forEach {
+    fields.filter { filter.filterDeserialize(it.field) }.forEach {
         val converter = it.converter
-        val name = it.name
+        val name = nameMapper.map(it.field, it.name)
         val value = converter.convertFrom(name, source)
         it.field.set(instance, value)
     }
