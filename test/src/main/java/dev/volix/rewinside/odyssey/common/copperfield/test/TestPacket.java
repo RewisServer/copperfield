@@ -53,6 +53,9 @@ public class TestPacket implements BsonConvertible, ProtoConvertible<Packet> {
         @CopperField(name = "type_url")
         private String typeUrl;
 
+        @CopperField(name = "value")
+        private byte[] value;
+
         @Override @NotNull
         public Class<Packet.Payload> getProtoClass() {
             return Packet.Payload.class;
@@ -74,6 +77,7 @@ public class TestPacket implements BsonConvertible, ProtoConvertible<Packet> {
 
         testPacket.payload = new Payload();
         testPacket.payload.typeUrl = "https://www.google.com";
+        testPacket.payload.value = new byte[] { 4, 2, 0, 6, 9 };
 
         final Packet packet = testPacket.toProtoMessage(protoRegistry);
         System.out.println(packet);
