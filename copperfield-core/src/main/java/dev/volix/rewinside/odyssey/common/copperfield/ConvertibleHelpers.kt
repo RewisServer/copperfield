@@ -2,7 +2,6 @@ package dev.volix.rewinside.odyssey.common.copperfield
 
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperField
 import dev.volix.rewinside.odyssey.common.copperfield.converter.Converter
-import dev.volix.rewinside.odyssey.common.copperfield.exception.NoMatchingConverterException
 
 /**
  * @author Benedikt Wüller
@@ -15,13 +14,9 @@ fun <T : Any> findFields(obj: Any, registry: ConverterRegistry<T>): List<CopperF
         .filter { it.isAnnotationPresent(CopperField::class.java) }
         .map { field ->
             val annotation = field.getDeclaredAnnotation(CopperField::class.java)
-
             val name = annotation.name
             val type = field.type
-
-            //if (type.isPrimitive) throw PrimitiveTypeException(name, type)
-            val converter = registry.findConverter(type) ?: throw NoMatchingConverterException(name, obj.javaClass)
-
+            val converter = registry.findConverter(type)
             field.isAccessible = true
             return@map CopperFieldDefinition(field, name, converter as Converter<T, Any>)
         }.toList()
