@@ -21,7 +21,7 @@ public class Test implements BsonConvertible, ProtoConvertible<PartyProtos.Party
     private String id;
 
     @CopperField(name = "leader_uuid")
-    private String leaderUuid;
+    private UUID leaderUuid;
 
     @CopperField(name = "test")
     @IgnoreProto
@@ -33,7 +33,7 @@ public class Test implements BsonConvertible, ProtoConvertible<PartyProtos.Party
 
         final Test instance = new Test();
         instance.id = UUID.randomUUID().toString();
-        instance.leaderUuid = UUID.randomUUID().toString();
+        instance.leaderUuid = UUID.randomUUID();
         instance.test = 1234;
 
         final Document document = instance.toBsonDocument(bsonRegistry);

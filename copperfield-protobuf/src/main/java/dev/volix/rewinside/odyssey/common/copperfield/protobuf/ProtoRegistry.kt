@@ -3,6 +3,8 @@ package dev.volix.rewinside.odyssey.common.copperfield.protobuf
 import com.google.protobuf.MessageOrBuilder
 import dev.volix.rewinside.odyssey.common.copperfield.ConverterRegistry
 import dev.volix.rewinside.odyssey.common.copperfield.protobuf.converter.ProtoReflectionConverter
+import dev.volix.rewinside.odyssey.common.copperfield.protobuf.converter.UuidProtoConverter
+import java.util.UUID
 
 /**
  * @author Benedikt Wüller
@@ -14,7 +16,6 @@ class ProtoRegistry : ConverterRegistry<MessageOrBuilder>() {
     //  - list
     //  - date
     //  - convertible
-    //  - uuid
 
     init {
         // Register default converters.
@@ -34,6 +35,8 @@ class ProtoRegistry : ConverterRegistry<MessageOrBuilder>() {
         this.registerConverter(Boolean::class.javaObjectType, ProtoReflectionConverter(Boolean::class.java))
 
         this.registerConverter(String::class.java, ProtoReflectionConverter(String::class.java))
+
+        this.registerConverter(UUID::class.java, UuidProtoConverter())
     }
 
 }

@@ -16,11 +16,11 @@ abstract class ReflectionConverter<S : Any, T : Any>(protected val type: Class<T
         this.getSetterMethod(name, target.javaClass).invoke(target, value)
     }
 
-    private fun getGetterMethod(name: String, type: Class<S>) = this.getterCache.getOrPut(name) {
+    protected open fun getGetterMethod(name: String, type: Class<S>) = this.getterCache.getOrPut(name) {
         type.getDeclaredMethod(this.getGetterMethodName(name))
     }
 
-    private fun getSetterMethod(name: String, type: Class<S>) = this.setterCache.getOrPut(name) {
+    protected open fun getSetterMethod(name: String, type: Class<S>) = this.setterCache.getOrPut(name) {
         type.getDeclaredMethod(this.getSetterMethodName(name), this.type)
     }
 

@@ -8,8 +8,10 @@ import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.FloatBsonCo
 import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.IntBsonConverter
 import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.LongBsonConverter
 import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.StringBsonConverter
+import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.UuidBsonConverter
 import org.bson.Document
 import java.util.Date
+import java.util.UUID
 
 /**
  * @author Benedikt Wüller
@@ -20,7 +22,6 @@ class BsonRegistry : ConverterRegistry<Document>() {
     //  - ByteString (bytes)
     //  - list
     //  - convertible
-    //  - uuid
 
     init {
         // Register default converters.
@@ -40,7 +41,9 @@ class BsonRegistry : ConverterRegistry<Document>() {
         this.registerConverter(Boolean::class.javaObjectType, BooleanBsonConverter())
 
         this.registerConverter(String::class.java, StringBsonConverter())
+
         this.registerConverter(Date::class.java, DateBsonConverter())
+        this.registerConverter(UUID::class.java, UuidBsonConverter())
     }
 
 }
