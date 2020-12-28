@@ -11,6 +11,21 @@
 
   <artifactId>copperfield-bson</artifactId>
 
+  <dependencies>
+    <dependency>
+      <groupId>dev.volix.rewinside.odyssey.common</groupId>
+      <artifactId>copperfield-core</artifactId>
+      <version>0.1.0</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mongodb</groupId>
+      <artifactId>bson</artifactId>
+      <version>4.1.1</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+
   <properties>
     <maven.compiler.source>8</maven.compiler.source>
     <maven.compiler.target>8</maven.compiler.target>
