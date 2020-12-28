@@ -10,8 +10,8 @@ import java.lang.reflect.Field
 class DummyTypeConverter<T : Any, C : Convertible, R : Registry<T, C, R>>
     : TypeConverter<R, Any, Any>(Any::class.java, Any::class.java) {
 
-    override fun convertOursToTheirs(value: Any?, field: Field, registry: R) = value
+    override fun convertOursToTheirs(value: Any, field: Field, registry: R) = value
 
-    override fun convertTheirsToOurs(value: Any?, field: Field, registry: R) = value
+    override fun convertTheirsToOurs(value: Any, field: Field, registry: R) = value
 
 }

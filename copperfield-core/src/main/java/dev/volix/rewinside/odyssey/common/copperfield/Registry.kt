@@ -59,7 +59,7 @@ abstract class Registry<T : Any, C : Convertible, R : Registry<T, C, R>>(
 
         return list.map {
             val converter = this.getConverter(annotation.innerType.java)
-            return@map converter.convertOursToTheirs(it, field, this as R)
+            return@map converter.tryConvertOursToTheirs(it, field, this as R)
         }
     }
 
@@ -69,7 +69,7 @@ abstract class Registry<T : Any, C : Convertible, R : Registry<T, C, R>>(
 
         return list.map {
             val converter = this.getConverter(annotation.innerType.java)
-            return@map converter.convertTheirsToOurs(it, field, this as R)
+            return@map converter.tryConvertTheirsToOurs(it, field, this as R)
         }
     }
 

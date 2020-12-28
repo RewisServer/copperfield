@@ -13,8 +13,7 @@ import java.time.ZonedDateTime
 class ZonedDateTimeProtoTypeConverter(private val timeZone: ZoneId)
     : ProtoTypeConverter<ZonedDateTime, Timestamp>(ZonedDateTime::class.java, Timestamp::class.java) {
 
-    override fun convertOursToTheirs(value: ZonedDateTime?, field: Field, registry: ProtoRegistry): Timestamp? {
-        if (value == null) return null
+    override fun convertOursToTheirs(value: ZonedDateTime, field: Field, registry: ProtoRegistry): Timestamp? {
         val instant = value.toInstant()
         return Timestamp.newBuilder()
             .setSeconds(instant.epochSecond)
@@ -22,8 +21,7 @@ class ZonedDateTimeProtoTypeConverter(private val timeZone: ZoneId)
             .build()
     }
 
-    override fun convertTheirsToOurs(value: Timestamp?, field: Field, registry: ProtoRegistry): ZonedDateTime? {
-        if (value == null) return null
+    override fun convertTheirsToOurs(value: Timestamp, field: Field, registry: ProtoRegistry): ZonedDateTime? {
         return ZonedDateTime.ofInstant(Instant.ofEpochSecond(value.seconds, value.nanos.toLong()), this.timeZone)
     }
 

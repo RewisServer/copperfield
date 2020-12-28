@@ -22,7 +22,7 @@ class BsonRegistry : Registry<Document, BsonConvertible, BsonRegistry>(Document:
         val document = Document()
         this.getFields(entity.javaClass, ConversionDirection.SERIALIZE).forEach { (field, name) ->
             val converter = this.getConverter(field.type)
-            var value = converter.convertOursToTheirs(field.get(entity), field, this)
+            var value = converter.tryConvertOursToTheirs(field.get(entity), field, this)
 
             if (value is List<*>) {
                 value = this.convertOurListToTheirs(value, field)
@@ -39,7 +39,7 @@ class BsonRegistry : Registry<Document, BsonConvertible, BsonRegistry>(Document:
         this.getFields(type, ConversionDirection.DESERIALIZE).forEach { (field, name) ->
             val converter = this.getConverter(field.type)
             val value = entity.get(name, converter.theirType)
-            var convertedValue = converter.convertTheirsToOurs(value, field, this)
+            var convertedValue = converter.tryConvertTheirsToOurs(value, field, this)
 
             if (convertedValue is List<*>) {
                 convertedValue = this.convertTheirListToOurs(convertedValue, field)

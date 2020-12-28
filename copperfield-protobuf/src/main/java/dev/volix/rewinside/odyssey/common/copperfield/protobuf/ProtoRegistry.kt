@@ -45,7 +45,7 @@ class ProtoRegistry : Registry<MessageOrBuilder, ProtoConvertible<*>, ProtoRegis
             }
 
             val converter = this.getConverter(field.type)
-            var value = converter.convertOursToTheirs(field.get(entity), field, this)
+            var value = converter.tryConvertOursToTheirs(field.get(entity), field, this)
 
             if (value is List<*>) {
                 value = this.convertOurListToTheirs(value, field)
@@ -75,7 +75,7 @@ class ProtoRegistry : Registry<MessageOrBuilder, ProtoConvertible<*>, ProtoRegis
             val value = method.invoke(entity)
 
             val converter = this.getConverter(field.type)
-            var convertedValue = converter.convertTheirsToOurs(value, field, this)
+            var convertedValue = converter.tryConvertTheirsToOurs(value, field, this)
 
             if (convertedValue is List<*>) {
                 convertedValue = this.convertTheirListToOurs(convertedValue, field)

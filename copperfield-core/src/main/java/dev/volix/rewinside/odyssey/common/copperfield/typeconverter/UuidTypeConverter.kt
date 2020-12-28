@@ -10,8 +10,8 @@ import java.util.UUID
 class UuidTypeConverter<R : Registry<*, *, R>>
     : TypeConverter<R, UUID, String>(UUID::class.java, String::class.java) {
 
-    override fun convertOursToTheirs(value: UUID?, field: Field, registry: R) = value?.toString()
+    override fun convertOursToTheirs(value: UUID, field: Field, registry: R) = value.toString()
 
-    override fun convertTheirsToOurs(value: String?, field: Field, registry: R): UUID? = if (value == null) null else UUID.fromString(value)
+    override fun convertTheirsToOurs(value: String, field: Field, registry: R): UUID = UUID.fromString(value)
 
 }

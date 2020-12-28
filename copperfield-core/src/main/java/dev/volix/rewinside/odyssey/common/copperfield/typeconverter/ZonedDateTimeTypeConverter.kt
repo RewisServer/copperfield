@@ -11,8 +11,8 @@ import java.time.format.DateTimeFormatter
 class ZonedDateTimeTypeConverter<R : Registry<*, *, *>>
     : TypeConverter<R, ZonedDateTime, String>(ZonedDateTime::class.java, String::class.java) {
 
-    override fun convertOursToTheirs(value: ZonedDateTime?, field: Field, registry: R) = value?.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+    override fun convertOursToTheirs(value: ZonedDateTime, field: Field, registry: R) = value.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
 
-    override fun convertTheirsToOurs(value: String?, field: Field, registry: R) = if (value == null) null else ZonedDateTime.parse(value, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+    override fun convertTheirsToOurs(value: String, field: Field, registry: R) = ZonedDateTime.parse(value, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
 
 }

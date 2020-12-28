@@ -15,18 +15,21 @@
       <groupId>dev.volix.rewinside.odyssey.common</groupId>
       <artifactId>copperfield-bson</artifactId>
       <version>0.1.0</version>
-      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>dev.volix.rewinside.odyssey.common</groupId>
       <artifactId>copperfield-protobuf</artifactId>
       <version>0.1.0</version>
-      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>dev.volix.rewinside.odyssey.hagrid.protocol</groupId>
       <artifactId>party</artifactId>
       <version>[0.0,)</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mongodb</groupId>
+      <artifactId>bson</artifactId>
+      <version>4.1.1</version>
     </dependency>
   </dependencies>
 
