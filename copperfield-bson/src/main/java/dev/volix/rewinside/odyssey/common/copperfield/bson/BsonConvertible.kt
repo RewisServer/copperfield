@@ -8,14 +8,28 @@ import org.bson.Document
  */
 interface BsonConvertible : Convertible<Document> {
 
-    fun toBsonDocument(): Document {
+    @JvmDefault
+    fun toBsonDocument(registry: BsonRegistry): Document {
         val document = Document()
-        // TODO
+        val fields = this.findFields(registry)
+        fields.forEach {
+            val converter = it.converter
+            val name = it.name
+            val value = it.field.get(this)
+            converter.convertTo(name, value, document)
+        }
         return document
     }
 
-    fun fromBsonDocument(source: Document) {
-        // TODO
+    @JvmDefault
+    fun fromBsonDocument(source: Document, registry: BsonRegistry) {
+        val fields = this.findFields(registry)
+        fields.forEach {
+            val converter = it.converter
+            val name = it.name
+            val value = converter.convertFrom(name, source)
+            it.field.set(this, value)
+        }
     }
 
 }

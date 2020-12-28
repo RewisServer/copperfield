@@ -2,6 +2,7 @@ package dev.volix.rewinside.odyssey.common.copperfield.protobuf
 
 import com.google.protobuf.GeneratedMessageV3
 import dev.volix.rewinside.odyssey.common.copperfield.ConverterRegistry
+import dev.volix.rewinside.odyssey.common.copperfield.protobuf.converter.ProtoReflectionConverter
 
 /**
  * @author Benedikt Wüller
@@ -12,6 +13,7 @@ class ProtoRegistry : ConverterRegistry<GeneratedMessageV3.Builder<*>>() {
     //  - ByteString (bytes)
     //  - list
     //  - date
+    //  - convertible
 
     init {
         // Register default converters.

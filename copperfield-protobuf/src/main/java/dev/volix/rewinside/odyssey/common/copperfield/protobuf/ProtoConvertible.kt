@@ -8,11 +8,11 @@ import dev.volix.rewinside.odyssey.common.copperfield.Convertible
  */
 interface ProtoConvertible<T : Message> : Convertible<T> {
 
-    fun toProtoMessage(): T {
+    fun toProtoMessage(registry: ProtoRegistry): T {
         TODO()
     }
 
-    fun fromProtoMessage(source: T) {
+    fun fromProtoMessage(source: T, registry: ProtoRegistry) {
         TODO()
     }
 

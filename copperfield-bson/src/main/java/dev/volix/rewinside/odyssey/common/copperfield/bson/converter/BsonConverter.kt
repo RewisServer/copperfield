@@ -1,6 +1,6 @@
-package dev.volix.rewinside.odyssey.common.copperfield.bson
+package dev.volix.rewinside.odyssey.common.copperfield.bson.converter
 
-import dev.volix.rewinside.odyssey.common.copperfield.Converter
+import dev.volix.rewinside.odyssey.common.copperfield.converter.Converter
 import org.bson.Document
 
 

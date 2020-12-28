@@ -1,5 +1,7 @@
 package dev.volix.rewinside.odyssey.common.copperfield
 
+import dev.volix.rewinside.odyssey.common.copperfield.converter.Converter
+
 /**
  * @author Benedikt Wüller
  */

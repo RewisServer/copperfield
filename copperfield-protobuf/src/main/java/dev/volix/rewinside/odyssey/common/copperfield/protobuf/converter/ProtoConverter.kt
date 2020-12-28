@@ -1,7 +1,7 @@
-package dev.volix.rewinside.odyssey.common.copperfield.protobuf
+package dev.volix.rewinside.odyssey.common.copperfield.protobuf.converter
 
 import com.google.protobuf.GeneratedMessageV3
-import dev.volix.rewinside.odyssey.common.copperfield.Converter
+import dev.volix.rewinside.odyssey.common.copperfield.converter.Converter
 
 
 /**
