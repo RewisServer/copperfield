@@ -1,17 +1,11 @@
 package dev.volix.rewinside.odyssey.common.copperfield.bson
 
 import dev.volix.rewinside.odyssey.common.copperfield.ConverterRegistry
-import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.BooleanBsonConverter
 import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.ConvertibleBsonConverter
-import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.DateBsonConverter
-import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.DoubleBsonConverter
-import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.FloatBsonConverter
-import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.IntBsonConverter
-import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.LongBsonConverter
-import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.StringBsonConverter
+import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.NumberBsonConverter
+import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.SimpleBsonConverter
 import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.UuidBsonConverter
 import org.bson.Document
-import java.util.Date
 import java.util.UUID
 
 /**
@@ -22,29 +16,12 @@ class BsonRegistry : ConverterRegistry<Document>() {
     // TODO
     //  - ByteString (bytes)
     //  - list
-    //  - convertible
+    //  - enum
 
     init {
-        // Register default converters.
-        this.registerConverter(Int::class.java, IntBsonConverter())
-        this.registerConverter(Int::class.javaObjectType, IntBsonConverter())
-
-        this.registerConverter(Long::class.java, LongBsonConverter())
-        this.registerConverter(Long::class.javaObjectType, LongBsonConverter())
-
-        this.registerConverter(Double::class.java, DoubleBsonConverter())
-        this.registerConverter(Double::class.javaObjectType, DoubleBsonConverter())
-
-        this.registerConverter(Float::class.java, FloatBsonConverter())
-        this.registerConverter(Float::class.javaObjectType, FloatBsonConverter())
-
-        this.registerConverter(Boolean::class.java, BooleanBsonConverter())
-        this.registerConverter(Boolean::class.javaObjectType, BooleanBsonConverter())
-
-        this.registerConverter(String::class.java, StringBsonConverter())
-        this.registerConverter(Date::class.java, DateBsonConverter())
+        this.defaultConverter = SimpleBsonConverter()
+        this.registerConverter(Number::class.java, NumberBsonConverter())
         this.registerConverter(UUID::class.java, UuidBsonConverter())
-
         this.registerConverter(BsonConvertible::class.java, ConvertibleBsonConverter())
     }
 

@@ -7,6 +7,6 @@ import java.lang.reflect.Field
 /**
  * @author Benedikt Wüller
  */
-class IntegerBsonConverter : BsonConverter<Int> {
+class IntegerBsonConverter : SimpleBsonConverter<Int>() {
     override fun convertFrom(name: String, source: Document, field: Field, registry: ConverterRegistry<Document>): Int? = source.getInteger(name)
 }

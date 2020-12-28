@@ -5,17 +5,18 @@ import dev.volix.rewinside.odyssey.common.copperfield.converter.Converter
 /**
  * @author Benedikt Wüller
  */
-open class ConverterRegistry<S : Any> {
+abstract class ConverterRegistry<S : Any> {
 
     private val converters = mutableMapOf<Class<*>, Converter<S, *>>()
+    protected var defaultConverter: Converter<S, Any>? = null
 
     fun <T : Any> registerConverter(type: Class<T>, converter: Converter<S, T>) {
         this.converters[type] = converter
     }
 
     fun <T : Any> findConverter(type: Class<T>) = this.converters.entries.firstOrNull { (supportedType, _) ->
-        if (!supportedType.isAssignableFrom(type)) return@firstOrNull false
-        return@firstOrNull true
-    }?.value as Converter<S, T>?
+        println("$type - $supportedType - ${supportedType.isAssignableFrom(type)}")
+        return@firstOrNull supportedType.isAssignableFrom(type)
+    }?.value as Converter<S, T>? ?: this.defaultConverter
 
 }

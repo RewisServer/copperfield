@@ -5,16 +5,17 @@ import com.google.protobuf.MessageOrBuilder
 import dev.volix.rewinside.odyssey.common.copperfield.ConverterRegistry
 import dev.volix.rewinside.odyssey.common.copperfield.protobuf.ProtoConvertible
 import java.lang.reflect.Field
-import java.lang.reflect.Method
 
 /**
  * @author Benedikt Wüller
  */
-class ConvertibleProtoConverter : ProtoReflectionConverter<ProtoConvertible<*>>(ProtoConvertible::class.java) {
+class ConvertibleProtoConverter : ProtoReflectionConverter<ProtoConvertible<*>>() {
 
     override fun convertTo(name: String, value: ProtoConvertible<*>?, target: MessageOrBuilder, field: Field, registry: ConverterRegistry<MessageOrBuilder>) {
-        val message = (value as ProtoConvertible<GeneratedMessageV3>?)?.toProtoMessage(field.type as Class<GeneratedMessageV3>, registry)
-        this.getSetterMethod(name, target.javaClass).invoke(target, message)
+        val message = value?.toProtoMessage(registry)
+        val type = value?.protoClass ?: (field.type.newInstance() as ProtoConvertible<*>).protoClass
+        val method = target.javaClass.getDeclaredMethod(this.getSetterMethodName(name), type)
+        method.invoke(target, message)
     }
 
     override fun convertFrom(name: String, source: MessageOrBuilder, field: Field, registry: ConverterRegistry<MessageOrBuilder>): ProtoConvertible<*>? {
@@ -23,10 +24,6 @@ class ConvertibleProtoConverter : ProtoReflectionConverter<ProtoConvertible<*>>(
         val instance = type.newInstance() as ProtoConvertible<GeneratedMessageV3>
         instance.fromProtoMessage(message, registry)
         return instance
-    }
-
-    override fun getSetterMethod(name: String, type: Class<MessageOrBuilder>): Method {
-        return type.getDeclaredMethod(this.getSetterMethodName(name), GeneratedMessageV3::class.java)
     }
 
 }

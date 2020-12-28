@@ -8,6 +8,6 @@ import java.util.Date
 /**
  * @author Benedikt Wüller
  */
-class DateBsonConverter : BsonConverter<Date> {
+class DateBsonConverter : SimpleBsonConverter<Date>() {
     override fun convertFrom(name: String, source: Document, field: Field, registry: ConverterRegistry<Document>): Date? = source.getDate(name)
 }

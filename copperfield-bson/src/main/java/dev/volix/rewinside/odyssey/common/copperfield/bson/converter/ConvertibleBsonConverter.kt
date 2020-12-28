@@ -8,7 +8,7 @@ import java.lang.reflect.Field
 /**
  * @author Benedikt Wüller
  */
-class ConvertibleBsonConverter : BsonConverter<BsonConvertible> {
+class ConvertibleBsonConverter : SimpleBsonConverter<BsonConvertible>() {
 
     override fun convertTo(name: String, value: BsonConvertible?, target: Document, field: Field, registry: ConverterRegistry<Document>) {
         target[name] = value?.toBsonDocument(registry)

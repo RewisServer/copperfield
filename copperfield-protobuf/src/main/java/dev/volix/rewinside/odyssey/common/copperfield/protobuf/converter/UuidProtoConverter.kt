@@ -9,10 +9,10 @@ import java.util.UUID
 /**
  * @author Benedikt Wüller
  */
-class UuidProtoConverter : ProtoReflectionConverter<UUID>(UUID::class.java) {
+class UuidProtoConverter : ProtoReflectionConverter<UUID>() {
 
     override fun convertTo(name: String, value: UUID?, target: MessageOrBuilder, field: Field, registry: ConverterRegistry<MessageOrBuilder>) {
-        this.getSetterMethod(name, target.javaClass).invoke(target, value?.toString())
+        this.getSetterMethod(name, target.javaClass, field).invoke(target, value?.toString())
     }
 
     override fun convertFrom(name: String, source: MessageOrBuilder, field: Field, registry: ConverterRegistry<MessageOrBuilder>): UUID? {
@@ -20,7 +20,7 @@ class UuidProtoConverter : ProtoReflectionConverter<UUID>(UUID::class.java) {
         return UUID.fromString(value)
     }
 
-    override fun getSetterMethod(name: String, type: Class<MessageOrBuilder>): Method {
+    override fun getSetterMethod(name: String, type: Class<MessageOrBuilder>, field: Field): Method {
         return type.getDeclaredMethod(this.getSetterMethodName(name), String::class.java)
     }
 

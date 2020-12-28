@@ -7,6 +7,6 @@ import java.lang.reflect.Field
 /**
  * @author Benedikt Wüller
  */
-class FloatBsonConverter : BsonConverter<Float> {
+class FloatBsonConverter : SimpleBsonConverter<Float>() {
     override fun convertFrom(name: String, source: Document, field: Field, registry: ConverterRegistry<Document>): Float? = source.getDouble(name)?.toFloat()
 }

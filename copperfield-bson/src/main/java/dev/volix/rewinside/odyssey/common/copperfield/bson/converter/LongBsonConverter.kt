@@ -7,6 +7,6 @@ import java.lang.reflect.Field
 /**
  * @author Benedikt Wüller
  */
-class LongBsonConverter : BsonConverter<Long> {
+class LongBsonConverter : SimpleBsonConverter<Long>() {
     override fun convertFrom(name: String, source: Document, field: Field, registry: ConverterRegistry<Document>): Long? = source.getLong(name)
 }

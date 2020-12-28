@@ -11,9 +11,11 @@ import dev.volix.rewinside.odyssey.common.copperfield.convertTo
  */
 interface ProtoConvertible<T : GeneratedMessageV3> {
 
+    val protoClass: Class<T>
+
     @JvmDefault
-    fun toProtoMessage(type: Class<T>, registry: ConverterRegistry<MessageOrBuilder>): T {
-        val newBuilderMethod = type.getDeclaredMethod("newBuilder")
+    fun toProtoMessage(registry: ConverterRegistry<MessageOrBuilder>): T {
+        val newBuilderMethod = protoClass.getDeclaredMethod("newBuilder")
         val builder = newBuilderMethod.invoke(null) as GeneratedMessageV3.Builder<*>
 
         convertTo(this, builder, registry, ProtoFieldNameMapper, ProtoFieldFilter)

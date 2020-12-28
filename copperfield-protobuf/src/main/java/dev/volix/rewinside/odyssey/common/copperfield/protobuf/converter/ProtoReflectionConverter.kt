@@ -7,7 +7,7 @@ import dev.volix.rewinside.odyssey.common.copperfield.snakeToPascalCase
 /**
  * @author Benedikt Wüller
  */
-open class ProtoReflectionConverter<T : Any>(type: Class<T>) : ReflectionConverter<MessageOrBuilder, T>(type), ProtoConverter<T> {
+open class ProtoReflectionConverter<T : Any> : ReflectionConverter<MessageOrBuilder, T>(), ProtoConverter<T> {
 
     override fun getGetterMethodName(name: String) = "get${name.snakeToPascalCase()}"
 
