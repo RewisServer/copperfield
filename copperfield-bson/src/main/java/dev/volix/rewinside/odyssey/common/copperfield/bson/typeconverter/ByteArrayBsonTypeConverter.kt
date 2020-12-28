@@ -12,6 +12,6 @@ class ByteArrayBsonTypeConverter
 
     override fun convertOursToTheirs(value: ByteArray, field: Field, registry: BsonRegistry) = Binary(value)
 
-    override fun convertTheirsToOurs(value: Binary, field: Field, registry: BsonRegistry) = value.data
+    override fun convertTheirsToOurs(value: Binary, field: Field, registry: BsonRegistry): ByteArray = value.data
 
 }
