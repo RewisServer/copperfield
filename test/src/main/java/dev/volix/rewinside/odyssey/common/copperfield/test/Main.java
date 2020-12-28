@@ -18,47 +18,69 @@ import org.bson.types.ObjectId;
 public class Main {
 
     public static void main(String[] args) {
-        final ProtoRegistry protoRegistry = new ProtoRegistry();
-        protoRegistry.setConverter(ZonedDateTime.class, new ZonedDateTimeTypeConverter<>());
-        protoRegistry.setConverter(ObjectId.class, new ObjectIdProtoTypeConverter());
+        runBsonTest(1_000_000);
+        runProtoTest(1_000_000);
+    }
 
-        final BsonRegistry bsonRegistry = new BsonRegistry();
+    private static void runBsonTest(final int amount) {
+        final BsonRegistry registry = new BsonRegistry();
+        final long start = System.nanoTime();
 
-        final PartyMember member = new PartyMember();
-        member.uuid = UUID.randomUUID();
-        member.rank = "LEADER";
+        for (int i = 0; i < amount; i++) {
+            final PartyMember member = new PartyMember();
+            member.uuid = UUID.randomUUID();
+            member.rank = "LEADER";
 
-        final Party party = new Party();
-        party.id = new ObjectId();
-        party.createdAt = Calendar.getInstance().toInstant().atZone(ZoneId.of("Europe/Berlin"));
+            final Party party = new Party();
+            party.id = new ObjectId();
+            party.createdAt = Calendar.getInstance().toInstant().atZone(ZoneId.of("Europe/Berlin"));
 
-        party.bannedUuids = new ArrayList<>();
-        party.bannedUuids.add(UUID.randomUUID().toString());
-        party.bannedUuids.add(UUID.randomUUID().toString());
-        party.bannedUuids.add(UUID.randomUUID().toString());
+            party.bannedUuids = new ArrayList<>();
+            party.bannedUuids.add(UUID.randomUUID().toString());
+            party.bannedUuids.add(UUID.randomUUID().toString());
+            party.bannedUuids.add(UUID.randomUUID().toString());
 
-        party.members = new ArrayList<>();
-        party.members.add(member);
+            party.members = new ArrayList<>();
+            party.members.add(member);
 
-        System.out.println("--- Bson Serialized Party ---");
+            final Document serializedBsonParty = registry.write(party, Document.class);
+            registry.read(serializedBsonParty, Party.class);
+        }
 
-        final Document serializedBsonParty = bsonRegistry.write(party, Document.class);
-        System.out.println(serializedBsonParty.toJson());
+        final long end = System.nanoTime();
+        System.out.println("Bson Test: " + (end - start) + " ns (avg " + ((end - start) / amount ) + " ns)");
+    }
 
-        System.out.println("--- Bson Deserialized Party ---");
+    private static void runProtoTest(final int amount) {
+        final ProtoRegistry registry = new ProtoRegistry();
+        registry.setConverter(ZonedDateTime.class, new ZonedDateTimeTypeConverter<>());
+        registry.setConverter(ObjectId.class, new ObjectIdProtoTypeConverter());
 
-        final Party deserializedBsonParty = bsonRegistry.read(serializedBsonParty, Party.class);
-        System.out.println(bsonRegistry.write(deserializedBsonParty, Document.class).toJson());
+        final long start = System.nanoTime();
 
-        System.out.println("--- Proto Serialized Party ---");
+        for (int i = 0; i < amount; i++) {
+            final PartyMember member = new PartyMember();
+            member.uuid = UUID.randomUUID();
+            member.rank = "LEADER";
 
-        final PartyProtos.Party serializedProtoParty = protoRegistry.write(party, PartyProtos.Party.class);
-        System.out.println(serializedProtoParty);
+            final Party party = new Party();
+            party.id = new ObjectId();
+            party.createdAt = Calendar.getInstance().toInstant().atZone(ZoneId.of("Europe/Berlin"));
 
-        System.out.println("--- Proto Deserialized Party ---");
+            party.bannedUuids = new ArrayList<>();
+            party.bannedUuids.add(UUID.randomUUID().toString());
+            party.bannedUuids.add(UUID.randomUUID().toString());
+            party.bannedUuids.add(UUID.randomUUID().toString());
 
-        final Party deserializedProtoParty = protoRegistry.read(serializedProtoParty, Party.class);
-        System.out.println(protoRegistry.write(deserializedProtoParty, PartyProtos.Party.class));
+            party.members = new ArrayList<>();
+            party.members.add(member);
+
+            final PartyProtos.Party serializedBsonParty = registry.write(party, party.getProtoClass());
+            registry.read(serializedBsonParty, Party.class);
+        }
+
+        final long end = System.nanoTime();
+        System.out.println("Proto Test: " + (end - start) + " ns (avg " + ((end - start) / amount ) + " ns)");
     }
 
 }
