@@ -10,6 +10,7 @@ import dev.volix.rewinside.odyssey.common.copperfield.protobuf.typeconverter.Zon
 import dev.volix.rewinside.odyssey.common.copperfield.snakeToPascalCase
 import dev.volix.rewinside.odyssey.common.copperfield.typeconverter.ConvertibleTypeConverter
 import java.lang.reflect.Field
+import java.lang.reflect.Method
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
@@ -18,6 +19,10 @@ import java.time.ZonedDateTime
  */
 class ProtoRegistry : Registry<MessageOrBuilder, ProtoConvertible<*>, ProtoRegistry>(MessageOrBuilder::class.java, ProtoConvertible::class.java) {
 
+    private val setterMethods = mutableMapOf<Field, Method>()
+    private val getterMethods = mutableMapOf<Field, Method>()
+    private val builderMethods = mutableMapOf<Class<out MessageOrBuilder>, Pair<Method, Method>>()
+
     init {
         this.setConverter(ZonedDateTime::class.java, ZonedDateTimeProtoTypeConverter(ZoneId.of("Europe/Berlin")))
     }
@@ -25,23 +30,33 @@ class ProtoRegistry : Registry<MessageOrBuilder, ProtoConvertible<*>, ProtoRegis
     override fun <A : MessageOrBuilder> write(entity: ProtoConvertible<*>?, type: Class<A>): A? {
         if (entity == null) return null
 
-        // TODO: cache
+        val builderMethods = this.builderMethods.getOrPut(type) {
+            val newBuilderMethod = type.getDeclaredMethod("newBuilder")
+            val builder = newBuilderMethod.invoke(null) as GeneratedMessageV3.Builder<*>
+            val buildMethod = builder.javaClass.getDeclaredMethod("build")
+            return@getOrPut newBuilderMethod to buildMethod
+        }
 
-        val newBuilderMethod = type.getDeclaredMethod("newBuilder")
+        val newBuilderMethod = builderMethods.first
         val builder = newBuilderMethod.invoke(null) as GeneratedMessageV3.Builder<*>
+        val buildMethod = builderMethods.second
 
         this.getFields(entity.javaClass, ConversionDirection.SERIALIZE).forEach { (field, name) ->
-            // This is fucking ugly but required for casting purposes.
-            val methodName = if (List::class.java.isAssignableFrom(field.type)) {
-                "addAll${name.snakeToPascalCase()}"
-            } else {
-                "set${name.snakeToPascalCase()}"
-            }
+            val method = this.setterMethods.getOrPut(field) {
+                // This is fucking ugly but required for casting purposes.
+                val methodName = if (List::class.java.isAssignableFrom(field.type)) {
+                    "addAll${name.snakeToPascalCase()}"
+                } else {
+                    "set${name.snakeToPascalCase()}"
+                }
 
-            // Find the method.
-            val method = builder.javaClass.declaredMethods.firstOrNull { it.name == methodName }
-            if (method == null || method.parameterTypes.isEmpty()) {
-                TODO("throw exception")
+                // Find the method.
+                val method = builder.javaClass.declaredMethods.firstOrNull { it.name == methodName }
+                if (method == null || method.parameterTypes.isEmpty()) {
+                    TODO("throw exception")
+                }
+
+                return@getOrPut method
             }
 
             val converter = this.getConverter(field.type)
@@ -54,24 +69,24 @@ class ProtoRegistry : Registry<MessageOrBuilder, ProtoConvertible<*>, ProtoRegis
             method.invoke(builder, value)
         }
 
-        val buildMethod = builder.javaClass.getDeclaredMethod("build")
         return buildMethod.invoke(builder) as A?
     }
 
     override fun <A : ProtoConvertible<*>> read(entity: MessageOrBuilder?, type: Class<A>): A? {
         if (entity == null) return null
 
-        // TODO: cache
-
         val instance = type.newInstance()
         this.getFields(type, ConversionDirection.DESERIALIZE).forEach { (field, name) ->
-            val methodName = if (List::class.java.isAssignableFrom(field.type)) {
-                "get${name.snakeToPascalCase()}List"
-            } else {
-                "get${name.snakeToPascalCase()}"
+            val method = this.getterMethods.getOrPut(field) {
+                val methodName = if (List::class.java.isAssignableFrom(field.type)) {
+                    "get${name.snakeToPascalCase()}List"
+                } else {
+                    "get${name.snakeToPascalCase()}"
+                }
+
+                return@getOrPut entity.javaClass.getDeclaredMethod(methodName)
             }
 
-            val method = entity.javaClass.getDeclaredMethod(methodName)
             val value = method.invoke(entity)
 
             val converter = this.getConverter(field.type)
