@@ -2,14 +2,14 @@ package dev.volix.rewinside.odyssey.common.copperfield.protobuf
 
 import dev.volix.rewinside.odyssey.common.copperfield.FieldFilter
 import dev.volix.rewinside.odyssey.common.copperfield.FieldNameMapper
-import dev.volix.rewinside.odyssey.common.copperfield.protobuf.annotation.IgnoreProto
-import dev.volix.rewinside.odyssey.common.copperfield.protobuf.annotation.ProtoName
+import dev.volix.rewinside.odyssey.common.copperfield.protobuf.annotation.CopperProtoIgnore
+import dev.volix.rewinside.odyssey.common.copperfield.protobuf.annotation.CopperProtoField
 
-object ProtoFieldFilter : FieldFilter<IgnoreProto>(IgnoreProto::class.java) {
-    override fun shouldIgnoreOnSerialize(annotation: IgnoreProto) = annotation.ignoreSerialize
-    override fun shouldIgnoreOnDeserialize(annotation: IgnoreProto) = annotation.ignoreDeserialize
+object ProtoFieldFilter : FieldFilter<CopperProtoIgnore>(CopperProtoIgnore::class.java) {
+    override fun shouldIgnoreOnSerialize(annotation: CopperProtoIgnore) = annotation.ignoreSerialize
+    override fun shouldIgnoreOnDeserialize(annotation: CopperProtoIgnore) = annotation.ignoreDeserialize
 }
 
-object ProtoFieldNameMapper : FieldNameMapper<ProtoName>(ProtoName::class.java) {
-    override fun getName(annotation: ProtoName) = annotation.name
+object ProtoFieldNameMapper : FieldNameMapper<CopperProtoField>(CopperProtoField::class.java) {
+    override fun getName(annotation: CopperProtoField) = annotation.name
 }
