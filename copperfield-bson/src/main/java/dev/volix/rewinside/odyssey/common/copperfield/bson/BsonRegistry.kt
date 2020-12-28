@@ -16,7 +16,6 @@ class BsonRegistry : ConverterRegistry<Document>() {
     // TODO
     //  - ByteString (bytes)
     //  - list
-    //  - enum
 
     init {
         this.defaultConverter = SimpleBsonConverter()
