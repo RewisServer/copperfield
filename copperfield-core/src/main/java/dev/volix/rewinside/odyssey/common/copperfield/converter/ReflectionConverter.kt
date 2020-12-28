@@ -1,5 +1,7 @@
 package dev.volix.rewinside.odyssey.common.copperfield.converter
 
+import dev.volix.rewinside.odyssey.common.copperfield.ConverterRegistry
+import java.lang.reflect.Field
 import java.lang.reflect.Method
 
 /**
@@ -10,9 +12,9 @@ abstract class ReflectionConverter<S : Any, T : Any>(protected val type: Class<T
     private val getterCache = mutableMapOf<String, Method>()
     private val setterCache = mutableMapOf<String, Method>()
 
-    override fun convertFrom(name: String, source: S) = this.getGetterMethod(name, source.javaClass).invoke(source) as T?
+    override fun convertFrom(name: String, source: S, field: Field, registry: ConverterRegistry<S>): T? = this.getGetterMethod(name, source.javaClass).invoke(source) as T?
 
-    override fun convertTo(name: String, value: T?, target: S) {
+    override fun convertTo(name: String, value: T?, target: S, field: Field, registry: ConverterRegistry<S>) {
         this.getSetterMethod(name, target.javaClass).invoke(target, value)
     }
 

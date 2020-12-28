@@ -33,7 +33,7 @@ fun <T : Any> convertTo(instance: Any, target: T, registry: ConverterRegistry<T>
         val converter = it.converter
         val name = nameMapper.map(it.field, it.name)
         val value = it.field.get(instance)
-        converter.convertTo(name, value, target)
+        converter.convertTo(name, value, target, it.field, registry)
     }
 }
 
@@ -42,7 +42,7 @@ fun <T : Any> convertFrom(instance: Any, source: T, registry: ConverterRegistry<
     fields.filter { filter.filterDeserialize(it.field) }.forEach {
         val converter = it.converter
         val name = nameMapper.map(it.field, it.name)
-        val value = converter.convertFrom(name, source)
+        val value = converter.convertFrom(name, source, it.field, registry)
         it.field.set(instance, value)
     }
 }

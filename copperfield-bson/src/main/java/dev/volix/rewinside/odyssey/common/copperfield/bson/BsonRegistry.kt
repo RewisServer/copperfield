@@ -2,6 +2,7 @@ package dev.volix.rewinside.odyssey.common.copperfield.bson
 
 import dev.volix.rewinside.odyssey.common.copperfield.ConverterRegistry
 import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.BooleanBsonConverter
+import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.ConvertibleBsonConverter
 import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.DateBsonConverter
 import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.DoubleBsonConverter
 import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.FloatBsonConverter
@@ -41,9 +42,10 @@ class BsonRegistry : ConverterRegistry<Document>() {
         this.registerConverter(Boolean::class.javaObjectType, BooleanBsonConverter())
 
         this.registerConverter(String::class.java, StringBsonConverter())
-
         this.registerConverter(Date::class.java, DateBsonConverter())
         this.registerConverter(UUID::class.java, UuidBsonConverter())
+
+        this.registerConverter(BsonConvertible::class.java, ConvertibleBsonConverter())
     }
 
 }
