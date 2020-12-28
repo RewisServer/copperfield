@@ -1,6 +1,7 @@
 package dev.volix.rewinside.odyssey.common.copperfield
 
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperField
+import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperListField
 import dev.volix.rewinside.odyssey.common.copperfield.typeconverter.ConvertibleTypeConverter
 import dev.volix.rewinside.odyssey.common.copperfield.typeconverter.DummyTypeConverter
 import dev.volix.rewinside.odyssey.common.copperfield.typeconverter.NumberTypeConverter
@@ -26,10 +27,7 @@ abstract class Registry<T : Any, C : Convertible, R : Registry<T, C, R>>(
         this.setConverter(Number::class.java, NumberTypeConverter())
         this.setConverter(UUID::class.java, UuidTypeConverter())
         this.setConverter(ZonedDateTime::class.java, ZonedDateTimeTypeConverter())
-        this.setConverter(this.convertibleType, ConvertibleTypeConverter(this.convertibleType, this.type))
     }
-
-    // --------------------------------------------------------------------------------------------------------------------
 
     fun <OURS : Any, THEIRS : Any> setConverter(type: Class<OURS>, converter: TypeConverter<R, OURS, THEIRS>) {
         this.typeConverters[type] = converter as TypeConverter<R, *, *>
@@ -40,10 +38,40 @@ abstract class Registry<T : Any, C : Convertible, R : Registry<T, C, R>>(
     fun <OURS : Any> getConverter(type: Class<OURS>): TypeConverter<R, Any, Any> {
         return (this.typeConverters.entries.firstOrNull { (supportedType, _) ->
             return@firstOrNull supportedType.isAssignableFrom(type)
-        }?.value ?: this.defaultTypeConverter) as TypeConverter<R, Any, Any>
+        }?.value ?:
+            if (this.convertibleType.isAssignableFrom(type)) {
+                val converter = this.createConvertibleTypeConverter(type as Class<C>)
+                this.setConverter(type, converter as TypeConverter<R, C, R>)
+                converter
+            } else {
+                this.defaultTypeConverter
+            }
+        ) as TypeConverter<R, Any, Any>
     }
 
-    // --------------------------------------------------------------------------------------------------------------------
+    protected open fun <A : C> createConvertibleTypeConverter(type: Class<A>): ConvertibleTypeConverter<T, A, *> {
+        return ConvertibleTypeConverter<T, A, R>(type, this.type)
+    }
+
+    protected fun convertOurListToTheirs(list: List<*>, field: Field): List<*> {
+        val annotation = field.getDeclaredAnnotation(CopperListField::class.java)
+            ?: throw IllegalStateException("Trying to convert list without @CopperListField annotation: ${field.name}")
+
+        return list.map {
+            val converter = this.getConverter(annotation.innerType.java)
+            return@map converter.convertOursToTheirs(it, field, this as R)
+        }
+    }
+
+    protected fun convertTheirListToOurs(list: List<*>, field: Field): List<*> {
+        val annotation = field.getDeclaredAnnotation(CopperListField::class.java)
+            ?: throw IllegalStateException("Trying to convert list without @CopperListField annotation: ${field.name}")
+
+        return list.map {
+            val converter = this.getConverter(annotation.innerType.java)
+            return@map converter.convertTheirsToOurs(it, field, this as R)
+        }
+    }
 
     abstract fun <A : T> write(entity: C?, type: Class<A>): A?
 
@@ -65,6 +93,14 @@ abstract class Registry<T : Any, C : Convertible, R : Registry<T, C, R>>(
                         "Set the serialized name using @CopperField or @CopperBsonField. " +
                         "Alternatively, disable this field for Bson serialization using @CopperBsonIgnore.")
 
+                val isList = List::class.java.isAssignableFrom(field.type)
+                val hasListAnnotation = field.isAnnotationPresent(CopperListField::class.java)
+                if (isList && !hasListAnnotation) {
+                    throw IllegalStateException("Field \"${field.name}\" in $type is a list but does not annotate @CopperListField.")
+                } else if (!isList && hasListAnnotation) {
+                    throw IllegalStateException("Field \"${field.name}\" annotates @CopperListField but is not a list.")
+                }
+
                 map[field] = name
             }
 
@@ -74,8 +110,14 @@ abstract class Registry<T : Any, C : Convertible, R : Registry<T, C, R>>(
 
     protected open fun isIgnored(field: Field, direction: ConversionDirection) = false
 
-    protected open fun isAnnotated(field: Field) = field.isAnnotationPresent(CopperField::class.java)
+    protected open fun isAnnotated(field: Field) = field.isAnnotationPresent(CopperField::class.java) || field.isAnnotationPresent(CopperListField::class.java)
 
-    protected open fun getName(field: Field) = field.getDeclaredAnnotation(CopperField::class.java)?.name
+    protected open fun getName(field: Field): String? {
+        var name = field.getDeclaredAnnotation(CopperListField::class.java)?.name
+        if (name.isNullOrEmpty()) {
+            name = field.getDeclaredAnnotation(CopperField::class.java)?.name
+        }
+        return name
+    }
 
 }

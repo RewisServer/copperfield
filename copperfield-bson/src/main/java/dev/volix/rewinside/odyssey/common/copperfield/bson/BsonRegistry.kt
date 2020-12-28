@@ -13,18 +13,7 @@ import java.lang.reflect.Field
  */
 class BsonRegistry : Registry<Document, BsonConvertible, BsonRegistry>(Document::class.java, BsonConvertible::class.java) {
 
-    // TODO
-    //  - list entry conversion
-
     init {
-//        this.defaultConverter = SimpleBsonConverter()
-//        this.registerConverter(Number::class.java, NumberBsonConverter())
-//        this.registerConverter(UUID::class.java, UuidBsonConverter())
-//        this.registerConverter(ByteArray::class.java, ByteArrayBsonConverter())
-//        this.registerConverter(BsonConvertible::class.java, ConvertibleBsonConverter())
-
-        // ------------------------------------------------------------------------------
-
         this.setConverter(ByteArray::class.java, ByteArrayBsonTypeConverter())
     }
 
@@ -33,7 +22,12 @@ class BsonRegistry : Registry<Document, BsonConvertible, BsonRegistry>(Document:
         val document = Document()
         this.getFields(entity.javaClass, ConversionDirection.SERIALIZE).forEach { (field, name) ->
             val converter = this.getConverter(field.type)
-            val value = converter.convertOursToTheirs(field.get(entity), field, this)
+            var value = converter.convertOursToTheirs(field.get(entity), field, this)
+
+            if (value is List<*>) {
+                value = this.convertOurListToTheirs(value, field)
+            }
+
             document[name] = value
         }
         return document as T?
@@ -45,7 +39,12 @@ class BsonRegistry : Registry<Document, BsonConvertible, BsonRegistry>(Document:
         this.getFields(type, ConversionDirection.DESERIALIZE).forEach { (field, name) ->
             val converter = this.getConverter(field.type)
             val value = entity.get(name, converter.theirType)
-            val convertedValue = converter.convertTheirsToOurs(value, field, this)
+            var convertedValue = converter.convertTheirsToOurs(value, field, this)
+
+            if (convertedValue is List<*>) {
+                convertedValue = this.convertTheirListToOurs(convertedValue, field)
+            }
+
             field.set(instance, convertedValue)
         }
         return instance

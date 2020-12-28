@@ -7,8 +7,13 @@ import java.lang.reflect.Field
 /**
  * @author Benedikt Wüller
  */
-class ConvertibleTypeConverter<T : Any, C : Convertible, R : Registry<T, C, R>>(ourType: Class<C>, theirType: Class<T>)
+class ConvertibleTypeConverter<T : Any, C : Convertible, R : Registry<T, C, R>>(ourType: Class<C>, theirType: Class<out T>)
     : TypeConverter<R, C, T>(ourType, theirType) {
+
+    init {
+        println(this.theirType)
+        println(this.ourType)
+    }
 
     override fun convertOursToTheirs(value: C?, field: Field, registry: R) = registry.write(value, this.theirType)
 

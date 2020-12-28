@@ -6,25 +6,26 @@ import dev.volix.rewinside.odyssey.common.copperfield.ConversionDirection
 import dev.volix.rewinside.odyssey.common.copperfield.Registry
 import dev.volix.rewinside.odyssey.common.copperfield.protobuf.annotation.CopperProtoField
 import dev.volix.rewinside.odyssey.common.copperfield.protobuf.annotation.CopperProtoIgnore
+import dev.volix.rewinside.odyssey.common.copperfield.protobuf.typeconverter.ZonedDateTimeProtoTypeConverter
 import dev.volix.rewinside.odyssey.common.copperfield.snakeToPascalCase
+import dev.volix.rewinside.odyssey.common.copperfield.typeconverter.ConvertibleTypeConverter
 import java.lang.reflect.Field
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 /**
  * @author Benedikt Wüller
  */
-class ProtoRegistry : Registry<MessageOrBuilder, ProtoConvertible, ProtoRegistry>(MessageOrBuilder::class.java, ProtoConvertible::class.java) {
-
-    // TODO
-    //  - list entry conversion
+class ProtoRegistry : Registry<MessageOrBuilder, ProtoConvertible<*>, ProtoRegistry>(MessageOrBuilder::class.java, ProtoConvertible::class.java) {
 
     init {
-//        this.setTypeConverter(ZonedDateTime::class.java, ZonedDateTimeProtoTypeConverter(ZoneId.of("Europe/Berlin")))
+        this.setConverter(ZonedDateTime::class.java, ZonedDateTimeProtoTypeConverter(ZoneId.of("Europe/Berlin")))
     }
 
-    override fun <A : MessageOrBuilder> write(entity: ProtoConvertible?, type: Class<A>): A? {
+    override fun <A : MessageOrBuilder> write(entity: ProtoConvertible<*>?, type: Class<A>): A? {
         if (entity == null) return null
 
-        // TODO: cache this stuff
+        // TODO: cache
 
         val newBuilderMethod = type.getDeclaredMethod("newBuilder")
         val builder = newBuilderMethod.invoke(null) as GeneratedMessageV3.Builder<*>
@@ -43,9 +44,13 @@ class ProtoRegistry : Registry<MessageOrBuilder, ProtoConvertible, ProtoRegistry
                 TODO("throw exception")
             }
 
-            val methodType = method.parameterTypes[0]
             val converter = this.getConverter(field.type)
-            val value = methodType.cast(converter.convertOursToTheirs(field.get(entity), field, this))
+            var value = converter.convertOursToTheirs(field.get(entity), field, this)
+
+            if (value is List<*>) {
+                value = this.convertOurListToTheirs(value, field)
+            }
+
             method.invoke(builder, value)
         }
 
@@ -53,8 +58,11 @@ class ProtoRegistry : Registry<MessageOrBuilder, ProtoConvertible, ProtoRegistry
         return buildMethod.invoke(builder) as A?
     }
 
-    override fun <A : ProtoConvertible> read(entity: MessageOrBuilder?, type: Class<A>): A? {
+    override fun <A : ProtoConvertible<*>> read(entity: MessageOrBuilder?, type: Class<A>): A? {
         if (entity == null) return null
+
+        // TODO: cache
+
         val instance = type.newInstance()
         this.getFields(type, ConversionDirection.DESERIALIZE).forEach { (field, name) ->
             val methodName = if (List::class.java.isAssignableFrom(field.type)) {
@@ -67,11 +75,19 @@ class ProtoRegistry : Registry<MessageOrBuilder, ProtoConvertible, ProtoRegistry
             val value = method.invoke(entity)
 
             val converter = this.getConverter(field.type)
-            val convertedValue = converter.convertTheirsToOurs(value, field, this)
+            var convertedValue = converter.convertTheirsToOurs(value, field, this)
+
+            if (convertedValue is List<*>) {
+                convertedValue = this.convertTheirListToOurs(convertedValue, field)
+            }
 
             field.set(instance, convertedValue)
         }
         return instance
+    }
+
+    override fun <A : ProtoConvertible<*>> createConvertibleTypeConverter(type: Class<A>): ConvertibleTypeConverter<MessageOrBuilder, A, *> {
+        return ConvertibleTypeConverter<MessageOrBuilder, A, ProtoRegistry>(type, type.newInstance().protoClass)
     }
 
     override fun isIgnored(field: Field, direction: ConversionDirection): Boolean {
