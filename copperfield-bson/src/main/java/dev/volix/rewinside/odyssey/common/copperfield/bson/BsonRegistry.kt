@@ -1,72 +1,35 @@
 package dev.volix.rewinside.odyssey.common.copperfield.bson
 
-import dev.volix.rewinside.odyssey.common.copperfield.ConversionDirection
 import dev.volix.rewinside.odyssey.common.copperfield.Registry
-import dev.volix.rewinside.odyssey.common.copperfield.bson.annotation.CopperBsonField
 import dev.volix.rewinside.odyssey.common.copperfield.bson.annotation.CopperBsonIgnore
-import dev.volix.rewinside.odyssey.common.copperfield.bson.typeconverter.ByteArrayBsonTypeConverter
+import dev.volix.rewinside.odyssey.common.copperfield.bson.annotation.CopperBsonName
+import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.ByteArrayToBsonBinaryConverter
 import org.bson.Document
 import java.lang.reflect.Field
 
 /**
  * @author Benedikt Wüller
  */
-class BsonRegistry : Registry<Document, BsonConvertible, BsonRegistry>(Document::class.java, BsonConvertible::class.java) {
+class BsonRegistry : Registry<BsonConvertable, Document>(BsonConvertable::class.java, Document::class.java) {
 
     init {
-        this.setConverter(ByteArray::class.java, ByteArrayBsonTypeConverter())
+        this.setConverter(ByteArray::class.java, ByteArrayToBsonBinaryConverter())
     }
 
-    override fun <T : Document> write(entity: BsonConvertible?, type: Class<T>): T? {
-        if (entity == null) return null
-        val document = Document()
-        this.getFields(entity.javaClass, ConversionDirection.SERIALIZE).forEach { (field, name) ->
-            val converter = this.getConverter(field.type)
-            var value = converter.tryConvertOursToTheirs(field.get(entity), field, this)
+    override fun createTheirs(convertible: BsonConvertable) = Document()
 
-            if (value is List<*>) {
-                value = this.convertOurListToTheirs(value, field)
-            }
-
-            document[name] = value
-        }
-        return document as T?
+    override fun readValue(name: String, entity: Document, type: Class<out Any>): Any? {
+        return entity[name, type]
     }
 
-    override fun <T : BsonConvertible> read(entity: Document?, type: Class<T>): T? {
-        if (entity == null) return null
-        val instance = type.newInstance()
-        this.getFields(type, ConversionDirection.DESERIALIZE).forEach { (field, name) ->
-            val converter = this.getConverter(field.type)
-            val value = entity.get(name, converter.theirType)
-            var convertedValue = converter.tryConvertTheirsToOurs(value, field, this)
-
-            if (convertedValue is List<*>) {
-                convertedValue = this.convertTheirListToOurs(convertedValue, field)
-            }
-
-            field.set(instance, convertedValue)
-        }
-        return instance
+    override fun writeValue(name: String, value: Any?, entity: Document, type: Class<out Any>) {
+        entity[name] = value
     }
 
-    override fun isIgnored(field: Field, direction: ConversionDirection): Boolean {
-        val annotation = field.getDeclaredAnnotation(CopperBsonIgnore::class.java) ?: return false
-        return when (direction) {
-            ConversionDirection.SERIALIZE -> annotation.ignoreSerialize
-            ConversionDirection.DESERIALIZE -> annotation.ignoreDeserialize
-            else -> false
-        }
+    override fun getName(name: String, field: Field): String {
+        return field.getDeclaredAnnotation(CopperBsonName::class.java)?.name ?: super.getName(name, field)
     }
 
-    override fun isAnnotated(field: Field) = super.isAnnotated(field) || field.isAnnotationPresent(CopperBsonField::class.java)
-
-    override fun getName(field: Field): String? {
-        var name = field.getDeclaredAnnotation(CopperBsonField::class.java)?.name
-        if (name.isNullOrEmpty()) {
-            name = super.getName(field)
-        }
-        return name
-    }
+    override fun isIgnored(field: Field) = super.isIgnored(field) || field.isAnnotationPresent(CopperBsonIgnore::class.java)
 
 }

@@ -9,4 +9,4 @@ import kotlin.reflect.KClass
  */
 @Target(AnnotationTarget.FIELD)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class CopperField(val name: String, val converter: KClass<out Converter<*, *>> = AutoConverter::class)
+annotation class CopperIterableType(val innerType: KClass<*>, val innerConverter: KClass<out Converter<*, *>> = AutoConverter::class)

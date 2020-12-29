@@ -5,4 +5,4 @@ package dev.volix.rewinside.odyssey.common.copperfield.protobuf.annotation
  */
 @Target(AnnotationTarget.FIELD)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class CopperProtoField(val name: String)
+annotation class CopperProtoName(val name: String)

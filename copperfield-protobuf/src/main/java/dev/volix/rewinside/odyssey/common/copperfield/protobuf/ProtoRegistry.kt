@@ -2,126 +2,66 @@ package dev.volix.rewinside.odyssey.common.copperfield.protobuf
 
 import com.google.protobuf.GeneratedMessageV3
 import com.google.protobuf.MessageOrBuilder
-import dev.volix.rewinside.odyssey.common.copperfield.ConversionDirection
 import dev.volix.rewinside.odyssey.common.copperfield.Registry
-import dev.volix.rewinside.odyssey.common.copperfield.protobuf.annotation.CopperProtoField
 import dev.volix.rewinside.odyssey.common.copperfield.protobuf.annotation.CopperProtoIgnore
-import dev.volix.rewinside.odyssey.common.copperfield.protobuf.typeconverter.ZonedDateTimeProtoTypeConverter
+import dev.volix.rewinside.odyssey.common.copperfield.protobuf.annotation.CopperProtoName
+import dev.volix.rewinside.odyssey.common.copperfield.protobuf.annotation.CopperProtoType
 import dev.volix.rewinside.odyssey.common.copperfield.snakeToPascalCase
-import dev.volix.rewinside.odyssey.common.copperfield.typeconverter.ConvertibleTypeConverter
 import java.lang.reflect.Field
-import java.lang.reflect.Method
-import java.time.ZoneId
-import java.time.ZonedDateTime
 
 /**
  * @author Benedikt Wüller
  */
-class ProtoRegistry : Registry<MessageOrBuilder, ProtoConvertible<*>, ProtoRegistry>(MessageOrBuilder::class.java, ProtoConvertible::class.java) {
-
-    private val setterMethods = mutableMapOf<Field, Method>()
-    private val getterMethods = mutableMapOf<Field, Method>()
-    private val builderMethods = mutableMapOf<Class<out MessageOrBuilder>, Pair<Method, Method>>()
+class ProtoRegistry : Registry<ProtoConvertable<*>, MessageOrBuilder>(ProtoConvertable::class.java, MessageOrBuilder::class.java) {
 
     init {
-        this.setConverter(ZonedDateTime::class.java, ZonedDateTimeProtoTypeConverter(ZoneId.of("Europe/Berlin")))
+//        this.setConverter(ZonedDateTime::class.java, ZonedDateTimeToProtoTimestampConverter(ZoneId.of("Europe/Berlin")))
     }
 
-    override fun <A : MessageOrBuilder> write(entity: ProtoConvertible<*>?, type: Class<A>): A? {
-        if (entity == null) return null
+    override fun createTheirs(convertible: ProtoConvertable<*>): MessageOrBuilder {
+        val annotation = convertible.javaClass.getDeclaredAnnotation(CopperProtoType::class.java)
+            ?: throw IllegalStateException("The annotation @CopperProtoType is required for ProtoConvertable: ${convertible.javaClass}")
 
-        val builderMethods = this.builderMethods.getOrPut(type) {
-            val newBuilderMethod = type.getDeclaredMethod("newBuilder")
-            val builder = newBuilderMethod.invoke(null) as GeneratedMessageV3.Builder<*>
-            val buildMethod = builder.javaClass.getDeclaredMethod("build")
-            return@getOrPut newBuilderMethod to buildMethod
+        val type = annotation.type.java
+        val newBuilderMethod = type.getDeclaredMethod("newBuilder")
+        return newBuilderMethod.invoke(null) as GeneratedMessageV3.Builder<*>
+    }
+
+    override fun <T : MessageOrBuilder> finalizeTheirs(instance: T): MessageOrBuilder {
+        return instance.javaClass.getDeclaredMethod("build").invoke(instance) as MessageOrBuilder
+    }
+
+    override fun readValue(name: String, entity: MessageOrBuilder, type: Class<out Any>): Any? {
+        val methodName = when {
+            Iterable::class.java.isAssignableFrom(type) -> "get${name.snakeToPascalCase()}List"
+            else -> "get${name.snakeToPascalCase()}"
         }
 
-        val newBuilderMethod = builderMethods.first
-        val builder = newBuilderMethod.invoke(null) as GeneratedMessageV3.Builder<*>
-        val buildMethod = builderMethods.second
+        val method = entity.javaClass.getDeclaredMethod(methodName)
+            ?: throw RuntimeException("Unable to find getter method for $type.")
 
-        this.getFields(entity.javaClass, ConversionDirection.SERIALIZE).forEach { (field, name) ->
-            val method = this.setterMethods.getOrPut(field) {
-                // This is fucking ugly but required for casting purposes.
-                val methodName = if (List::class.java.isAssignableFrom(field.type)) {
-                    "addAll${name.snakeToPascalCase()}"
-                } else {
-                    "set${name.snakeToPascalCase()}"
-                }
+        return method.invoke(entity)
+    }
 
-                // Find the method.
-                val method = builder.javaClass.declaredMethods.firstOrNull { it.name == methodName }
-                if (method == null || method.parameterTypes.isEmpty()) {
-                    TODO("throw exception")
-                }
-
-                return@getOrPut method
-            }
-
-            val converter = this.getConverter(field.type)
-            var value = converter.tryConvertOursToTheirs(field.get(entity), field, this)
-
-            if (value is List<*>) {
-                value = this.convertOurListToTheirs(value, field)
-            }
-
-            method.invoke(builder, value)
+    override fun writeValue(name: String, value: Any?, entity: MessageOrBuilder, type: Class<out Any>) {
+        val methodName = when {
+            Iterable::class.java.isAssignableFrom(type) -> "addAll${name.snakeToPascalCase()}"
+            else -> "set${name.snakeToPascalCase()}"
         }
 
-        return buildMethod.invoke(builder) as A?
+        val method = entity.javaClass.declaredMethods.firstOrNull { method ->
+            if (method.name != methodName) return@firstOrNull false
+            if (method.parameterCount != 1) return@firstOrNull false
+            method.parameterTypes.first().isAssignableFrom(type)
+        } ?: throw RuntimeException("Unable to find setter method for $type.")
+
+        method.invoke(entity, value)
     }
 
-    override fun <A : ProtoConvertible<*>> read(entity: MessageOrBuilder?, type: Class<A>): A? {
-        if (entity == null) return null
-
-        val instance = type.newInstance()
-        this.getFields(type, ConversionDirection.DESERIALIZE).forEach { (field, name) ->
-            val method = this.getterMethods.getOrPut(field) {
-                val methodName = if (List::class.java.isAssignableFrom(field.type)) {
-                    "get${name.snakeToPascalCase()}List"
-                } else {
-                    "get${name.snakeToPascalCase()}"
-                }
-
-                return@getOrPut entity.javaClass.getDeclaredMethod(methodName)
-            }
-
-            val value = method.invoke(entity)
-
-            val converter = this.getConverter(field.type)
-            var convertedValue = converter.tryConvertTheirsToOurs(value, field, this)
-
-            if (convertedValue is List<*>) {
-                convertedValue = this.convertTheirListToOurs(convertedValue, field)
-            }
-
-            field.set(instance, convertedValue)
-        }
-        return instance
+    override fun getName(name: String, field: Field): String {
+        return field.getDeclaredAnnotation(CopperProtoName::class.java)?.name ?: super.getName(name, field)
     }
 
-    override fun <A : ProtoConvertible<*>> createConvertibleTypeConverter(type: Class<A>): ConvertibleTypeConverter<MessageOrBuilder, A, *> {
-        return ConvertibleTypeConverter<MessageOrBuilder, A, ProtoRegistry>(type, type.newInstance().protoClass)
-    }
-
-    override fun isIgnored(field: Field, direction: ConversionDirection): Boolean {
-        val annotation = field.getDeclaredAnnotation(CopperProtoIgnore::class.java) ?: return false
-        return when (direction) {
-            ConversionDirection.SERIALIZE -> annotation.ignoreSerialize
-            ConversionDirection.DESERIALIZE -> annotation.ignoreDeserialize
-            else -> false
-        }
-    }
-
-    override fun isAnnotated(field: Field) = super.isAnnotated(field) || field.isAnnotationPresent(CopperProtoField::class.java)
-
-    override fun getName(field: Field): String? {
-        var name = field.getDeclaredAnnotation(CopperProtoField::class.java)?.name
-        if (name.isNullOrEmpty()) {
-            name = super.getName(field)
-        }
-        return name
-    }
+    override fun isIgnored(field: Field) = super.isIgnored(field) || field.isAnnotationPresent(CopperProtoIgnore::class.java)
 
 }

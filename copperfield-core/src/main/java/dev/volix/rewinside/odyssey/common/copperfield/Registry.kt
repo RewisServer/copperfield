@@ -1,13 +1,16 @@
 package dev.volix.rewinside.odyssey.common.copperfield
 
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperField
-import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperListField
-import dev.volix.rewinside.odyssey.common.copperfield.typeconverter.ConvertibleTypeConverter
-import dev.volix.rewinside.odyssey.common.copperfield.typeconverter.DummyTypeConverter
-import dev.volix.rewinside.odyssey.common.copperfield.typeconverter.NumberTypeConverter
-import dev.volix.rewinside.odyssey.common.copperfield.typeconverter.TypeConverter
-import dev.volix.rewinside.odyssey.common.copperfield.typeconverter.UuidTypeConverter
-import dev.volix.rewinside.odyssey.common.copperfield.typeconverter.ZonedDateTimeTypeConverter
+import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperIterableType
+import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperMapTypes
+import dev.volix.rewinside.odyssey.common.copperfield.converter.Converter
+import dev.volix.rewinside.odyssey.common.copperfield.converter.ConvertibleConverter
+import dev.volix.rewinside.odyssey.common.copperfield.converter.IterableConverter
+import dev.volix.rewinside.odyssey.common.copperfield.converter.MapConverter
+import dev.volix.rewinside.odyssey.common.copperfield.converter.NoOpConverter
+import dev.volix.rewinside.odyssey.common.copperfield.converter.NumberConverter
+import dev.volix.rewinside.odyssey.common.copperfield.converter.UuidToStringConverter
+import dev.volix.rewinside.odyssey.common.copperfield.converter.ZonedDateTimeToStringConverter
 import java.lang.reflect.Field
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -15,113 +18,121 @@ import java.util.UUID
 /**
  * @author Benedikt Wüller
  */
-abstract class Registry<T : Any, C : Convertible, R : Registry<T, C, R>>(
-    protected val type: Class<T>, protected val convertibleType: Class<C>) {
+abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourType: Class<OurType>, private val theirType: Class<TheirType>) {
 
-    private val typeConverters = mutableMapOf<Class<*>, TypeConverter<R, *, *>>()
-    protected var defaultTypeConverter = DummyTypeConverter<T, C, R>()
+    companion object {
+        private val FALLBACK_CONVERTER = NoOpConverter()
+    }
 
-    private val fieldCache = mutableMapOf<Pair<ConversionDirection, Class<*>>, Map<Field, String>>()
+    private val defaultConverters = mutableMapOf<Class<*>, Converter<*, *>>()
+    private val converters = mutableMapOf<Class<out Converter<*, *>>, Converter<*, *>>()
 
     init {
-        this.setConverter(Number::class.java, NumberTypeConverter())
-        this.setConverter(UUID::class.java, UuidTypeConverter())
-        this.setConverter(ZonedDateTime::class.java, ZonedDateTimeTypeConverter())
+        // Register default converters.
+        this.setConverter(Number::class.java, NumberConverter())
+        this.setConverter(Map::class.java, MapConverter())
+        this.setConverter(Iterable::class.java, IterableConverter())
+        this.setConverter(UUID::class.java, UuidToStringConverter())
+        this.setConverter(ZonedDateTime::class.java, ZonedDateTimeToStringConverter())
     }
 
-    fun <OURS : Any, THEIRS : Any> setConverter(type: Class<OURS>, converter: TypeConverter<R, OURS, THEIRS>) {
-        this.typeConverters[type] = converter as TypeConverter<R, *, *>
+    fun setConverter(type: Class<*>, converter: Class<Converter<*, *>>) {
+        this.setConverter(type, converter.newInstance())
     }
 
-    fun <OURS : Any> removeConverter(type: Class<OURS>) = this.typeConverters.remove(type)
+    fun setConverter(type: Class<*>, converter: Converter<*, *>) {
+        this.defaultConverters[type] = converter
+        this.converters[converter.javaClass] = converter
+    }
 
-    fun <OURS : Any> getConverter(type: Class<OURS>): TypeConverter<R, Any, Any> {
-        return (this.typeConverters.entries.firstOrNull { (supportedType, _) ->
+    fun <T : Any> getConverterByValueType(type: Class<T>): Converter<Any, Any> {
+        if (this.ourType.isAssignableFrom(type) && !this.defaultConverters.containsKey(type)) {
+            this.setConverter(type, ConvertibleConverter(type as Class<out OurType>, this.theirType))
+        }
+
+        return (this.defaultConverters.entries.firstOrNull { (supportedType, _) ->
             return@firstOrNull supportedType.isAssignableFrom(type)
-        }?.value ?:
-            if (this.convertibleType.isAssignableFrom(type)) {
-                val converter = this.createConvertibleTypeConverter(type as Class<C>)
-                this.setConverter(type, converter as TypeConverter<R, C, R>)
-                converter
-            } else {
-                this.defaultTypeConverter
-            }
-        ) as TypeConverter<R, Any, Any>
+        }?.value ?: FALLBACK_CONVERTER) as Converter<Any, Any>
     }
 
-    protected open fun <A : C> createConvertibleTypeConverter(type: Class<A>): ConvertibleTypeConverter<T, A, *> {
-        return ConvertibleTypeConverter<T, A, R>(type, this.type)
-    }
+    fun getConverterByConverterType(type: Class<out Converter<*, *>>) = this.converters.getOrPut(type, type::newInstance) as Converter<Any, Any>
 
-    protected fun convertOurListToTheirs(list: List<*>, field: Field): List<*> {
-        val annotation = field.getDeclaredAnnotation(CopperListField::class.java)
-            ?: throw IllegalStateException("Trying to convert list without @CopperListField annotation: ${field.name}")
+    fun toTheirs(convertible: OurType?): TheirType? {
+        if (convertible == null) return null
+        val instance = this.createTheirs(convertible)
 
-        return list.map {
-            val converter = this.getConverter(annotation.innerType.java)
-            return@map converter.tryConvertOursToTheirs(it, field, this as R)
-        }
-    }
+        this.findFields(convertible.javaClass).forEach {
+            val annotation = it.getDeclaredAnnotation(CopperField::class.java)
+            val name = this.getName(annotation.name, it)
 
-    protected fun convertTheirListToOurs(list: List<*>, field: Field): List<*> {
-        val annotation = field.getDeclaredAnnotation(CopperListField::class.java)
-            ?: throw IllegalStateException("Trying to convert list without @CopperListField annotation: ${field.name}")
+            val converterType = annotation.converter
+            val converter = this.getConverterByConverterType(converterType.java)
 
-        return list.map {
-            val converter = this.getConverter(annotation.innerType.java)
-            return@map converter.tryConvertTheirsToOurs(it, field, this as R)
-        }
-    }
+            val value = it.get(convertible)
+            val convertedValue = converter.toTheirs(value, it, this, it.type)
 
-    abstract fun <A : T> write(entity: C?, type: Class<A>): A?
+            val isMap = it.isAnnotationPresent(CopperMapTypes::class.java) && Map::class.java.isAssignableFrom(it.type)
+            val isIterable = it.isAnnotationPresent(CopperIterableType::class.java) && Iterable::class.java.isAssignableFrom(it.type)
 
-    abstract fun <A : C> read(entity: T?, type: Class<A>): A?
-
-    protected open fun <A : C> getFields(type: Class<A>, direction: ConversionDirection): Map<Field, String> {
-        val key = Pair(direction, type)
-        return this.fieldCache.getOrPut(key) {
-            val fields = type.declaredFields
-                .filter { this.isAnnotated(it) }
-                .filterNot { this.isIgnored(it, direction) }
-
-            val map = mutableMapOf<Field, String>()
-            fields.forEach { field ->
-                field.isAccessible = true
-
-                val name = this.getName(field)
-                if (name.isNullOrEmpty()) throw IllegalStateException("Serialized name for field \"${field.name}\" in $type is empty. " +
-                        "Set the serialized name using @CopperField or @CopperBsonField. " +
-                        "Alternatively, disable this field for Bson serialization using @CopperBsonIgnore.")
-
-                val isList = List::class.java.isAssignableFrom(field.type)
-                val hasListAnnotation = field.isAnnotationPresent(CopperListField::class.java)
-                if (isList && !hasListAnnotation) {
-                    throw IllegalStateException("Field \"${field.name}\" in $type is a list but does not annotate @CopperListField.")
-                } else if (!isList && hasListAnnotation) {
-                    throw IllegalStateException("Field \"${field.name}\" annotates @CopperListField but is not a list.")
-                }
-
-                map[field] = name
+            val writeType = when {
+                isMap -> Map::class.java
+                isIterable -> Iterable::class.java
+                else -> convertedValue?.javaClass ?: converter.theirType
             }
 
-            return@getOrPut map
+            this.writeValue(name, convertedValue, instance, writeType)
         }
+
+        return this.finalizeTheirs(instance)
     }
 
-    protected open fun isIgnored(field: Field, direction: ConversionDirection) = false
+    fun <T : OurType> toOurs(entity: TheirType?, type: Class<T>): T? {
+        if (entity == null) return null
+        val instance = this.createOurs(type)
 
-    protected open fun isAnnotated(field: Field) = field.isAnnotationPresent(CopperField::class.java) || field.isAnnotationPresent(CopperListField::class.java)
+        this.findFields(type).forEach {
+            val annotation = it.getDeclaredAnnotation(CopperField::class.java)
+            val name = this.getName(annotation.name, it)
 
-    protected open fun getName(field: Field): String? {
-        var name = field.getDeclaredAnnotation(CopperListField::class.java)?.name
-        if (name.isNullOrEmpty()) {
-            name = field.getDeclaredAnnotation(CopperField::class.java)?.name
+            val converterType = annotation.converter
+            val converter = this.getConverterByConverterType(converterType.java)
+
+            val isMap = it.isAnnotationPresent(CopperMapTypes::class.java) && Map::class.java.isAssignableFrom(it.type)
+            val isIterable = it.isAnnotationPresent(CopperIterableType::class.java) && Iterable::class.java.isAssignableFrom(it.type)
+
+            val readType = when {
+                isMap -> Map::class.java
+                isIterable -> Iterable::class.java
+                else -> converter.theirType
+            }
+
+            val value = this.readValue(name, entity, readType)
+            val convertedValue = converter.toOurs(value, it, this, it.type)
+            it.set(instance, convertedValue)
         }
-        return name
+
+        return instance
     }
 
-    fun initializeInsertionProcess() {
-        println("Dick has been planted.")
+    private fun findFields(type: Class<out OurType>): List<Field> {
+        return type.declaredFields
+            .filter { it.isAnnotationPresent(CopperField::class.java) }
+            .filterNot { this.isIgnored(it) }
+            .map { it.isAccessible = true; it }
     }
+
+    protected open fun <T : OurType> createOurs(type: Class<out T>) = type.newInstance()
+
+    protected open fun <T : TheirType> finalizeTheirs(instance: T): TheirType = instance
+
+    protected abstract fun createTheirs(convertible: OurType): TheirType
+
+    protected abstract fun readValue(name: String, entity: TheirType, type: Class<out Any>): Any?
+
+    protected abstract fun writeValue(name: String, value: Any?, entity: TheirType, type: Class<out Any>)
+
+    protected open fun getName(name: String, field: Field) = name
+
+    protected open fun isIgnored(field: Field) = false
 
 }

@@ -9,4 +9,7 @@ import kotlin.reflect.KClass
  */
 @Target(AnnotationTarget.FIELD)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class CopperField(val name: String, val converter: KClass<out Converter<*, *>> = AutoConverter::class)
+annotation class CopperMapTypes(
+    val keyType: KClass<*>, val keyConverter: KClass<out Converter<*, *>> = AutoConverter::class,
+    val valueType: KClass<*>, val valueConverter: KClass<out Converter<*, *>> = AutoConverter::class
+)
