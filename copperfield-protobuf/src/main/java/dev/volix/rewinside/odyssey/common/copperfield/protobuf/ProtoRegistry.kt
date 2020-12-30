@@ -10,6 +10,7 @@ import dev.volix.rewinside.odyssey.common.copperfield.protobuf.converter.ByteArr
 import dev.volix.rewinside.odyssey.common.copperfield.protobuf.converter.MapToProtoStructConverter
 import dev.volix.rewinside.odyssey.common.copperfield.protobuf.converter.ZonedDateTimeToProtoTimestampConverter
 import dev.volix.rewinside.odyssey.common.copperfield.snakeToPascalCase
+import java.lang.reflect.Method
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
@@ -17,6 +18,9 @@ import java.time.ZonedDateTime
  * @author Benedikt Wüller
  */
 class ProtoRegistry : Registry<ProtoConvertable<*>, MessageOrBuilder>(ProtoConvertable::class.java, MessageOrBuilder::class.java) {
+
+    private val getterMethods = mutableMapOf<Pair<String, Class<*>>, Method>()
+    private val setterMethods = mutableMapOf<Pair<String, Class<*>>, Method>()
 
     init {
         // Register additional annotation.
@@ -42,32 +46,45 @@ class ProtoRegistry : Registry<ProtoConvertable<*>, MessageOrBuilder>(ProtoConve
     }
 
     override fun readValue(name: String, entity: MessageOrBuilder, type: Class<out Any>): Any? {
-        val methodName = when {
-            Iterable::class.java.isAssignableFrom(type) -> "get${name.snakeToPascalCase()}List"
-            else -> "get${name.snakeToPascalCase()}"
-        }
-
-        val method = entity.javaClass.getDeclaredMethod(methodName)
-            ?: throw RuntimeException("Unable to find getter method for $type.")
-
-        return method.invoke(entity)
+        return this.getGetterMethod(name, entity.javaClass, type).invoke(entity)
     }
 
     override fun writeValue(name: String, value: Any?, entity: MessageOrBuilder, type: Class<out Any>) {
         val correctedType = if (type == Map::class.java && value is Struct) Struct::class.java else type
+        this.getSetterMethod(name, entity.javaClass, correctedType).invoke(entity, value)
+    }
 
-        val methodName = when {
-            Iterable::class.java.isAssignableFrom(correctedType) -> "addAll${name.snakeToPascalCase()}"
-            else -> "set${name.snakeToPascalCase()}"
+    private fun getGetterMethod(name: String, entityType: Class<out Any>, type: Class<out Any>): Method {
+        val key = name to type
+        return this.getterMethods.getOrPut(key) {
+            val methodName = when {
+                Iterable::class.java.isAssignableFrom(type) -> "get${name.snakeToPascalCase()}List"
+                else -> "get${name.snakeToPascalCase()}"
+            }
+            return@getOrPut entityType.getDeclaredMethod(methodName)
         }
+    }
 
-        val method = entity.javaClass.declaredMethods.firstOrNull { method ->
-            if (method.name != methodName) return@firstOrNull false
-            if (method.parameterCount != 1) return@firstOrNull false
-            method.parameterTypes.first().isAssignableFrom(correctedType)
-        } ?: throw RuntimeException("Unable to find setter method for $correctedType.")
+    private fun getSetterMethod(name: String, entityType: Class<out MessageOrBuilder>, type: Class<out Any>): Method {
+        val key = name to type
+        return this.setterMethods.getOrPut(key) {
+            val methodName = when {
+                Iterable::class.java.isAssignableFrom(type) -> "addAll${name.snakeToPascalCase()}"
+                else -> "set${name.snakeToPascalCase()}"
+            }
 
-        method.invoke(entity, value)
+            return@getOrPut entityType.declaredMethods.firstOrNull { method ->
+                if (method.name != methodName) return@firstOrNull false
+                if (method.parameterCount != 1) return@firstOrNull false
+                method.parameterTypes.first().isAssignableFrom(type)
+            } ?: throw RuntimeException("Unable to find setter method for $type.")
+        }
+    }
+
+    override fun clearCache() {
+        super.clearCache()
+        this.getterMethods.clear()
+        this.setterMethods.clear()
     }
 
 }

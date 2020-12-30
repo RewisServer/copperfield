@@ -29,6 +29,8 @@ abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourT
     private val defaultConverters = LinkedHashMap<Class<*>, Converter<*, *>>()
     private val converters = mutableMapOf<Class<out Converter<*, *>>, Converter<*, *>>()
 
+    private val fieldDefinitions = mutableMapOf<Class<*>, List<FieldDefinition>>()
+
     init {
         // Register annotation.
         this.registerAnnotation(CopperField::class.java)
@@ -74,27 +76,17 @@ abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourT
         if (convertible == null) return null
         val instance = this.createTheirs(convertible)
 
-        // TODO: cache
-
-        this.findFields(convertible.javaClass).forEach {
-            val name = this.getName(it)
-
-            val converterType = this.getConverterType(it)
-            val converter = this.getConverterByConverterType(converterType)
-
-            val value = it.get(convertible)
-            val convertedValue = converter.toTheirs(value, it, this, it.type)
-
-            val isMap = it.isAnnotationPresent(CopperMapTypes::class.java) && Map::class.java.isAssignableFrom(it.type)
-            val isIterable = it.isAnnotationPresent(CopperIterableType::class.java) && Iterable::class.java.isAssignableFrom(it.type)
+        this.getFieldDefinitions(convertible.javaClass).forEach {
+            val value = it.field.get(convertible)
+            val convertedValue = it.converter.toTheirs(value, it.field, this, it.field.type)
 
             val writeType = when {
-                isMap -> Map::class.java
-                isIterable -> Iterable::class.java
-                else -> convertedValue?.javaClass ?: converter.theirType
+                it.isMap -> Map::class.java
+                it.isIterable -> Iterable::class.java
+                else -> convertedValue?.javaClass ?: it.converter.theirType
             }
 
-            this.writeValue(name, convertedValue, instance, writeType)
+            this.writeValue(it.name, convertedValue, instance, writeType)
         }
 
         return this.finalizeTheirs(instance)
@@ -104,29 +96,35 @@ abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourT
         if (entity == null) return null
         val instance = this.createOurs(type)
 
-        // TODO: cache
-
-        this.findFields(type).forEach {
-            val name = this.getName(it)
-
-            val converterType = this.getConverterType(it)
-            val converter = this.getConverterByConverterType(converterType)
-
-            val isMap = it.isAnnotationPresent(CopperMapTypes::class.java) && Map::class.java.isAssignableFrom(it.type)
-            val isIterable = it.isAnnotationPresent(CopperIterableType::class.java) && Iterable::class.java.isAssignableFrom(it.type)
-
+        this.getFieldDefinitions(type).forEach {
             val readType = when {
-                isMap -> Map::class.java
-                isIterable -> Iterable::class.java
-                else -> converter.theirType
+                it.isMap -> Map::class.java
+                it.isIterable -> Iterable::class.java
+                else -> it.converter.theirType
             }
 
-            val value = this.readValue(name, entity, readType)
-            val convertedValue = converter.toOurs(value, it, this, it.type)
-            it.set(instance, convertedValue)
+            val value = this.readValue(it.name, entity, readType)
+            val convertedValue = it.converter.toOurs(value, it.field, this, it.field.type)
+            it.field.set(instance, convertedValue)
         }
 
         return instance
+    }
+
+    private fun getFieldDefinitions(type: Class<out OurType>): List<FieldDefinition> {
+        return this.fieldDefinitions.getOrPut(type) {
+            return@getOrPut this.findFields(type).map {
+                val name = this.getName(it)
+
+                val converterType = this.getConverterType(it)
+                val converter = this.getConverterByConverterType(converterType)
+
+                val isMap = it.isAnnotationPresent(CopperMapTypes::class.java) && Map::class.java.isAssignableFrom(it.type)
+                val isIterable = it.isAnnotationPresent(CopperIterableType::class.java) && Iterable::class.java.isAssignableFrom(it.type)
+
+                return@map FieldDefinition(it, name, converter, isMap, isIterable)
+            }
+        }
     }
 
     private fun findFields(type: Class<out OurType>): List<Field> {
@@ -175,5 +173,9 @@ abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourT
     protected abstract fun readValue(name: String, entity: TheirType, type: Class<out Any>): Any?
 
     protected abstract fun writeValue(name: String, value: Any?, entity: TheirType, type: Class<out Any>)
+
+    protected open fun clearCache() {
+        this.fieldDefinitions.clear()
+    }
 
 }
