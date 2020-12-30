@@ -1,5 +1,6 @@
 package dev.volix.rewinside.odyssey.common.copperfield.benchmark;
 
+import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperField;
 import dev.volix.rewinside.odyssey.common.copperfield.benchmark.party.Party;
 import dev.volix.rewinside.odyssey.common.copperfield.benchmark.party.PartyEvent;
 import dev.volix.rewinside.odyssey.common.copperfield.benchmark.party.PartyMember;

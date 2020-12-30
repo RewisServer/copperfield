@@ -3,12 +3,10 @@ package dev.volix.rewinside.odyssey.common.copperfield.protobuf
 import com.google.protobuf.GeneratedMessageV3
 import com.google.protobuf.MessageOrBuilder
 import dev.volix.rewinside.odyssey.common.copperfield.Registry
-import dev.volix.rewinside.odyssey.common.copperfield.protobuf.annotation.CopperProtoIgnore
-import dev.volix.rewinside.odyssey.common.copperfield.protobuf.annotation.CopperProtoName
+import dev.volix.rewinside.odyssey.common.copperfield.protobuf.annotation.CopperProtoField
 import dev.volix.rewinside.odyssey.common.copperfield.protobuf.annotation.CopperProtoType
 import dev.volix.rewinside.odyssey.common.copperfield.protobuf.converter.ZonedDateTimeToProtoTimestampConverter
 import dev.volix.rewinside.odyssey.common.copperfield.snakeToPascalCase
-import java.lang.reflect.Field
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
@@ -18,6 +16,7 @@ import java.time.ZonedDateTime
 class ProtoRegistry : Registry<ProtoConvertable<*>, MessageOrBuilder>(ProtoConvertable::class.java, MessageOrBuilder::class.java) {
 
     init {
+        this.registerAnnotation(CopperProtoField::class.java)
         this.setConverter(ZonedDateTime::class.java, ZonedDateTimeToProtoTimestampConverter(ZoneId.of("Europe/Berlin")))
     }
 
@@ -60,11 +59,5 @@ class ProtoRegistry : Registry<ProtoConvertable<*>, MessageOrBuilder>(ProtoConve
 
         method.invoke(entity, value)
     }
-
-    override fun getName(name: String, field: Field): String {
-        return field.getDeclaredAnnotation(CopperProtoName::class.java)?.name ?: super.getName(name, field)
-    }
-
-    override fun isIgnored(field: Field) = super.isIgnored(field) || field.isAnnotationPresent(CopperProtoIgnore::class.java)
 
 }

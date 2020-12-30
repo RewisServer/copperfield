@@ -1,8 +1,10 @@
 package dev.volix.rewinside.odyssey.common.copperfield
 
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperField
+import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperIgnore
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperIterableType
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperMapTypes
+import dev.volix.rewinside.odyssey.common.copperfield.converter.AutoConverter
 import dev.volix.rewinside.odyssey.common.copperfield.converter.Converter
 import dev.volix.rewinside.odyssey.common.copperfield.converter.ConvertibleConverter
 import dev.volix.rewinside.odyssey.common.copperfield.converter.IterableConverter
@@ -24,16 +26,25 @@ abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourT
         private val FALLBACK_CONVERTER = NoOpConverter()
     }
 
+    private val annotations = mutableMapOf<Class<out Annotation>, CopperFieldAnnotationHelper>()
+
     private val defaultConverters = LinkedHashMap<Class<*>, Converter<*, *>>()
     private val converters = mutableMapOf<Class<out Converter<*, *>>, Converter<*, *>>()
 
     init {
+        // Register annotation.
+        this.registerAnnotation(CopperField::class.java)
+
         // Register default converters.
         this.setConverter(Number::class.java, NumberConverter())
         this.setConverter(Iterable::class.java, IterableConverter())
         this.setConverter(Map::class.java, MapConverter())
         this.setConverter(UUID::class.java, UuidToStringConverter())
         this.setConverter(ZonedDateTime::class.java, ZonedDateTimeToStringConverter())
+    }
+
+    protected fun registerAnnotation(type: Class<out Annotation>) {
+        this.annotations[type] = CopperFieldAnnotationHelper(type)
     }
 
     fun setConverter(type: Class<*>, converter: Class<Converter<*, *>>) {
@@ -66,12 +77,13 @@ abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourT
         if (convertible == null) return null
         val instance = this.createTheirs(convertible)
 
-        this.findFields(convertible.javaClass).forEach {
-            val annotation = it.getDeclaredAnnotation(CopperField::class.java)
-            val name = this.getName(annotation.name, it)
+        // TODO: cache
 
-            val converterType = annotation.converter
-            val converter = this.getConverterByConverterType(converterType.java)
+        this.findFields(convertible.javaClass).forEach {
+            val name = this.getName(it)
+
+            val converterType = this.getConverterType(it)
+            val converter = this.getConverterByConverterType(converterType)
 
             val value = it.get(convertible)
             val convertedValue = converter.toTheirs(value, it, this, it.type)
@@ -95,12 +107,13 @@ abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourT
         if (entity == null) return null
         val instance = this.createOurs(type)
 
-        this.findFields(type).forEach {
-            val annotation = it.getDeclaredAnnotation(CopperField::class.java)
-            val name = this.getName(annotation.name, it)
+        // TODO: cache
 
-            val converterType = annotation.converter
-            val converter = this.getConverterByConverterType(converterType.java)
+        this.findFields(type).forEach {
+            val name = this.getName(it)
+
+            val converterType = this.getConverterType(it)
+            val converter = this.getConverterByConverterType(converterType)
 
             val isMap = it.isAnnotationPresent(CopperMapTypes::class.java) && Map::class.java.isAssignableFrom(it.type)
             val isIterable = it.isAnnotationPresent(CopperIterableType::class.java) && Iterable::class.java.isAssignableFrom(it.type)
@@ -121,9 +134,37 @@ abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourT
 
     private fun findFields(type: Class<out OurType>): List<Field> {
         return type.declaredFields
-            .filter { it.isAnnotationPresent(CopperField::class.java) }
-            .filterNot { this.isIgnored(it) }
+            .filter(this::isAnnotated)
+            .filterNot(this::isIgnored)
             .map { it.isAccessible = true; it }
+    }
+
+    protected open fun isAnnotated(field: Field) = this.annotations.keys.any(field::isAnnotationPresent)
+
+    protected open fun isIgnored(field: Field): Boolean {
+        val annotation = field.getDeclaredAnnotation(CopperIgnore::class.java) ?: return false
+        return annotation.convertables.any { it.java.isAssignableFrom(this.ourType) }
+    }
+
+    protected open fun getName(field: Field): String {
+        var name = ""
+        this.annotations.forEach { (type, helper) ->
+            val annotation = field.getDeclaredAnnotation(type) ?: return@forEach
+            val annotationName = helper.getName(annotation)
+            if (annotationName.isEmpty()) return@forEach
+            name = annotationName
+        }
+        if (name.isEmpty()) throw IllegalStateException("No valid name has been set for field ${field.name}.")
+        return name
+    }
+
+    protected open fun getConverterType(field: Field): Class<Converter<Any, Any>> {
+        var converter: Class<Converter<Any, Any>> = AutoConverter::class.java as Class<Converter<Any, Any>>
+        this.annotations.forEach { (type, helper) ->
+            val annotation = field.getDeclaredAnnotation(type) ?: return@forEach
+            converter = helper.getConverter(annotation)
+        }
+        return converter
     }
 
     protected open fun <T : OurType> createOurs(type: Class<out T>) = type.newInstance()
@@ -135,9 +176,5 @@ abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourT
     protected abstract fun readValue(name: String, entity: TheirType, type: Class<out Any>): Any?
 
     protected abstract fun writeValue(name: String, value: Any?, entity: TheirType, type: Class<out Any>)
-
-    protected open fun getName(name: String, field: Field) = name
-
-    protected open fun isIgnored(field: Field) = false
 
 }
