@@ -11,6 +11,8 @@ Copperfield provides a series of annotations to convert POJOs both to and from m
 
 ## Usage
 
+### Basics
+
 For each target format there is a `Registry` and `Convertable` implementation. For example: the `BsonRegistry` only supports conversion
 of classes implementing the `BsonConvertable` interface.
 
@@ -25,11 +27,21 @@ The format specific `@Copper<Type>Field` annotations can either be used as stand
 When using them as standalone annotations, this field will only be converted to this specific format.
 When using them additionally, the `name` and `converter` values will override those of the `@CopperField` annotation for this format, if they are set.
 
+### Maps and Iterables
+
 When working with maps and/or iterables and their respective default converters, the `@CopperMapTypes` and `@CopperIterableType` annotations **must**
 be set as well. Those are required to ensure the corresponding converters are being used on the keys and/or values. Additional converters can
 also be set.
 
+### Ignore target formats
+
 If you want to ignore a field for one or more target formats, use the `@CopperIgnore` annotation.
+
+### Custom and alternative converters
+
+Custom and alternative converters can be registered or replaced using `registry.setConverter(valueType, converter)`. 
+
+### Example
 
 ```java
 @CopperProtoType(type = ProtoPerson.class) // required for ProtoConvertables.
@@ -74,5 +86,3 @@ final ProtoRegistry protoRegistry = new ProtoRegistry();
 final ProtoPerson message = protoRegistry.toTheirs(person);
 final Person protoPerson = protoRegistry.toOurs(message, Person.class);
 ```
-
-Custom converters can be registered or replaced using `registry.setConverter(valueType, converter)`. 
