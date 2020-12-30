@@ -4,10 +4,13 @@ import dev.volix.rewinside.odyssey.common.copperfield.benchmark.party.Party;
 import dev.volix.rewinside.odyssey.common.copperfield.benchmark.party.PartyEvent;
 import dev.volix.rewinside.odyssey.common.copperfield.benchmark.party.PartyMember;
 import dev.volix.rewinside.odyssey.common.copperfield.bson.BsonRegistry;
+import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.ObjectIdToStringConverter;
 import dev.volix.rewinside.odyssey.common.copperfield.protobuf.ProtoRegistry;
 import dev.volix.rewinside.odyssey.hagrid.protocol.party.PartyProtos;
 import java.time.ZoneId;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -19,7 +22,9 @@ public class Example {
 
     public static void main(String[] args) {
         final BsonRegistry bsonRegistry = new BsonRegistry();
+
         final ProtoRegistry protoRegistry = new ProtoRegistry();
+        protoRegistry.setConverter(ObjectId.class, ObjectIdToStringConverter.class);
 
         final Party party = createParty();
 
@@ -71,6 +76,11 @@ public class Example {
         event.at = Calendar.getInstance().toInstant().atZone(ZoneId.of("Europe/Berlin"));
         event.type = type;
         event.details.put("some_key", "some_value");
+
+        final Map<String, Object> test = new HashMap<>();
+        test.put("another_key", "another_value");
+        event.details.put("test", test);
+
         return event;
     }
 

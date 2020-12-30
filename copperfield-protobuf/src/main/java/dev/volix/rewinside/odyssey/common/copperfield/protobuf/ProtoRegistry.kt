@@ -2,9 +2,12 @@ package dev.volix.rewinside.odyssey.common.copperfield.protobuf
 
 import com.google.protobuf.GeneratedMessageV3
 import com.google.protobuf.MessageOrBuilder
+import com.google.protobuf.Struct
 import dev.volix.rewinside.odyssey.common.copperfield.Registry
 import dev.volix.rewinside.odyssey.common.copperfield.protobuf.annotation.CopperProtoField
 import dev.volix.rewinside.odyssey.common.copperfield.protobuf.annotation.CopperProtoType
+import dev.volix.rewinside.odyssey.common.copperfield.protobuf.converter.ByteArrayToByteStringConverter
+import dev.volix.rewinside.odyssey.common.copperfield.protobuf.converter.MapToProtoStructConverter
 import dev.volix.rewinside.odyssey.common.copperfield.protobuf.converter.ZonedDateTimeToProtoTimestampConverter
 import dev.volix.rewinside.odyssey.common.copperfield.snakeToPascalCase
 import java.time.ZoneId
@@ -16,7 +19,12 @@ import java.time.ZonedDateTime
 class ProtoRegistry : Registry<ProtoConvertable<*>, MessageOrBuilder>(ProtoConvertable::class.java, MessageOrBuilder::class.java) {
 
     init {
+        // Register additional annotation.
         this.registerAnnotation(CopperProtoField::class.java)
+
+        // Register additional/replacement converters.
+        this.setConverter(Map::class.java, MapToProtoStructConverter::class.java)
+        this.setConverter(ByteArray::class.java, ByteArrayToByteStringConverter::class.java)
         this.setConverter(ZonedDateTime::class.java, ZonedDateTimeToProtoTimestampConverter(ZoneId.of("Europe/Berlin")))
     }
 
@@ -46,16 +54,18 @@ class ProtoRegistry : Registry<ProtoConvertable<*>, MessageOrBuilder>(ProtoConve
     }
 
     override fun writeValue(name: String, value: Any?, entity: MessageOrBuilder, type: Class<out Any>) {
+        val correctedType = if (type == Map::class.java && value is Struct) Struct::class.java else type
+
         val methodName = when {
-            Iterable::class.java.isAssignableFrom(type) -> "addAll${name.snakeToPascalCase()}"
+            Iterable::class.java.isAssignableFrom(correctedType) -> "addAll${name.snakeToPascalCase()}"
             else -> "set${name.snakeToPascalCase()}"
         }
 
         val method = entity.javaClass.declaredMethods.firstOrNull { method ->
             if (method.name != methodName) return@firstOrNull false
             if (method.parameterCount != 1) return@firstOrNull false
-            method.parameterTypes.first().isAssignableFrom(type)
-        } ?: throw RuntimeException("Unable to find setter method for $type.")
+            method.parameterTypes.first().isAssignableFrom(correctedType)
+        } ?: throw RuntimeException("Unable to find setter method for $correctedType.")
 
         method.invoke(entity, value)
     }

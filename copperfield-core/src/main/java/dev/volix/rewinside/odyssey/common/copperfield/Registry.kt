@@ -12,9 +12,7 @@ import dev.volix.rewinside.odyssey.common.copperfield.converter.MapConverter
 import dev.volix.rewinside.odyssey.common.copperfield.converter.NoOpConverter
 import dev.volix.rewinside.odyssey.common.copperfield.converter.NumberConverter
 import dev.volix.rewinside.odyssey.common.copperfield.converter.UuidToStringConverter
-import dev.volix.rewinside.odyssey.common.copperfield.converter.ZonedDateTimeToStringConverter
 import java.lang.reflect.Field
-import java.time.ZonedDateTime
 import java.util.UUID
 
 /**
@@ -36,18 +34,17 @@ abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourT
         this.registerAnnotation(CopperField::class.java)
 
         // Register default converters.
-        this.setConverter(Number::class.java, NumberConverter())
-        this.setConverter(Iterable::class.java, IterableConverter())
-        this.setConverter(Map::class.java, MapConverter())
-        this.setConverter(UUID::class.java, UuidToStringConverter())
-        this.setConverter(ZonedDateTime::class.java, ZonedDateTimeToStringConverter())
+        this.setConverter(Number::class.java, NumberConverter::class.java)
+        this.setConverter(UUID::class.java, UuidToStringConverter::class.java)
+        this.setConverter(Iterable::class.java, IterableConverter::class.java)
+        this.setConverter(Map::class.java, MapConverter::class.java)
     }
 
     protected fun registerAnnotation(type: Class<out Annotation>) {
         this.annotations[type] = CopperFieldAnnotationHelper(type)
     }
 
-    fun setConverter(type: Class<*>, converter: Class<Converter<*, *>>) {
+    fun setConverter(type: Class<*>, converter: Class<out Converter<*, *>>) {
         this.setConverter(type, converter.newInstance())
     }
 
