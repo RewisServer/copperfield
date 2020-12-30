@@ -24,14 +24,14 @@ abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourT
         private val FALLBACK_CONVERTER = NoOpConverter()
     }
 
-    private val defaultConverters = mutableMapOf<Class<*>, Converter<*, *>>()
+    private val defaultConverters = LinkedHashMap<Class<*>, Converter<*, *>>()
     private val converters = mutableMapOf<Class<out Converter<*, *>>, Converter<*, *>>()
 
     init {
         // Register default converters.
         this.setConverter(Number::class.java, NumberConverter())
-        this.setConverter(Map::class.java, MapConverter())
         this.setConverter(Iterable::class.java, IterableConverter())
+        this.setConverter(Map::class.java, MapConverter())
         this.setConverter(UUID::class.java, UuidToStringConverter())
         this.setConverter(ZonedDateTime::class.java, ZonedDateTimeToStringConverter())
     }
@@ -55,8 +55,8 @@ abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourT
             this.setConverter(type, ConvertibleConverter(type as Class<out OurType>, this.theirType))
         }
 
-        return (this.defaultConverters.entries.firstOrNull { (supportedType, _) ->
-            return@firstOrNull supportedType.isAssignableFrom(type)
+        return (this.defaultConverters.entries.lastOrNull { (supportedType, _) ->
+            return@lastOrNull supportedType.isAssignableFrom(type)
         }?.value ?: FALLBACK_CONVERTER) as Converter<Any, Any>
     }
 

@@ -23,7 +23,7 @@ public class Benchmark {
         final BsonRegistry bsonRegistry = new BsonRegistry();
 
         final ProtoRegistry protoRegistry = new ProtoRegistry();
-        protoRegistry.setConverter(ZonedDateTime.class, new ZonedDateTimeToStringConverter());
+        protoRegistry.setConverter(ZonedDateTime.class, new ZonedDateTimeToStringConverter()); // not required when using real timestamps.
 
         final Party party = createParty();
 
