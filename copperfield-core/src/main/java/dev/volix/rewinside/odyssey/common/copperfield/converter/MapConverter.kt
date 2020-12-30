@@ -26,7 +26,11 @@ class MapConverter : Converter<Map<*, *>, Map<*, *>>(Map::class.java, Map::class
     }
 
     private fun getConverters(field: Field?, registry: Registry<*, *>): Pair<Pair<Class<*>, Converter<Any, Any>>, Pair<Class<*>, Converter<Any, Any>>> {
-        val annotation = field?.getDeclaredAnnotation(CopperMapTypes::class.java)
+        val annotation = when (field) {
+            null -> null
+            else -> field.getDeclaredAnnotation(CopperMapTypes::class.java)
+                ?: throw IllegalStateException("Maps using the default MapConverter must annotate @CopperMapTypes: ${field.name}")
+        }
 
         val keyType = annotation?.keyType?.java ?: Any::class.java
         val keyConverter = if (annotation != null) {

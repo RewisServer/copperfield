@@ -45,6 +45,11 @@ abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourT
         this.converters[converter.javaClass] = converter
     }
 
+    fun unsetConverter(type: Class<*>) {
+        val converter = this.defaultConverters.remove(type) ?: return
+        this.converters.remove(converter.javaClass)
+    }
+
     fun <T : Any> getConverterByValueType(type: Class<T>): Converter<Any, Any> {
         if (this.ourType.isAssignableFrom(type) && !this.defaultConverters.containsKey(type)) {
             this.setConverter(type, ConvertibleConverter(type as Class<out OurType>, this.theirType))

@@ -20,9 +20,13 @@ class IterableConverter : Converter<Iterable<*>, Iterable<*>>(Iterable::class.ja
     }
 
     private fun getConverter(field: Field?, registry: Registry<*, *>) : Pair<Class<*>, Converter<Any, Any>> {
-        val annotation = field?.getDeclaredAnnotation(CopperIterableType::class.java)
-        val type = annotation?.innerType?.java ?: Any::class.java
+        val annotation = when (field) {
+            null -> null
+            else -> field.getDeclaredAnnotation(CopperIterableType::class.java)
+                ?: throw IllegalStateException("Iterables using the default IterableConverter must annotate @CopperIterableType: ${field.name}")
+        }
 
+        val type = annotation?.innerType?.java ?: Any::class.java
         val converter = if (annotation != null) {
             registry.getConverterByConverterType(annotation.innerConverter.java)
         } else {
