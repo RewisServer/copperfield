@@ -13,7 +13,7 @@
         <module>copperfield-core</module>
         <module>copperfield-protobuf</module>
         <module>copperfield-bson</module>
-        <module>benchmark</module>
+        <module>example</module>
     </modules>
 
     <properties>

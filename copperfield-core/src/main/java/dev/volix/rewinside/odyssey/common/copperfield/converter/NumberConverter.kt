@@ -6,7 +6,7 @@ import java.lang.reflect.Field
 /**
  * @author Benedikt Wüller
  */
-class NumberConverter : Converter<Number, Number>(Number::class.java, Number::class.java) {
+open class NumberConverter : Converter<Number, Number>(Number::class.java, Number::class.java) {
 
     override fun toTheirs(value: Number?, field: Field?, registry: Registry<*, *>, type: Class<out Number>) = value
 

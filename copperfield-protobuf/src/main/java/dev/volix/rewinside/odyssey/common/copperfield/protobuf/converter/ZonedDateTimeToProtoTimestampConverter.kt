@@ -11,7 +11,7 @@ import java.time.ZonedDateTime
 /**
  * @author Benedikt Wüller
  */
-class ZonedDateTimeToProtoTimestampConverter(private val timeZone: ZoneId) : Converter<ZonedDateTime, Timestamp>(ZonedDateTime::class.java, Timestamp::class.java) {
+open class ZonedDateTimeToProtoTimestampConverter(private val timeZone: ZoneId) : Converter<ZonedDateTime, Timestamp>(ZonedDateTime::class.java, Timestamp::class.java) {
 
     override fun toTheirs(value: ZonedDateTime?, field: Field?, registry: Registry<*, *>, type: Class<out ZonedDateTime>): Timestamp? {
         val instant = value?.toInstant() ?: return null

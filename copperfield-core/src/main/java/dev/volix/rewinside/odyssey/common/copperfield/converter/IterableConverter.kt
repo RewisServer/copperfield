@@ -7,7 +7,7 @@ import java.lang.reflect.Field
 /**
  * @author Benedikt Wüller
  */
-class IterableConverter : Converter<Iterable<*>, Iterable<*>>(Iterable::class.java, Iterable::class.java) {
+open class IterableConverter : Converter<Iterable<*>, Iterable<*>>(Iterable::class.java, Iterable::class.java) {
 
     override fun toTheirs(value: Iterable<*>?, field: Field?, registry: Registry<*, *>, type: Class<out Iterable<*>>): Iterable<*> {
         val result = this.getConverter(field, registry)

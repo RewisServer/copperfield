@@ -8,7 +8,11 @@ import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperMapTypes;
 import dev.volix.rewinside.odyssey.common.copperfield.benchmark.converter.PartyLeaderToUuidStringConverter;
 import dev.volix.rewinside.odyssey.common.copperfield.bson.BsonConvertable;
 import dev.volix.rewinside.odyssey.common.copperfield.bson.annotation.CopperBsonField;
+import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.ObjectIdToStringConverter;
+import dev.volix.rewinside.odyssey.common.copperfield.converter.AutoConverter;
+import dev.volix.rewinside.odyssey.common.copperfield.converter.ZonedDateTimeToStringConverter;
 import dev.volix.rewinside.odyssey.common.copperfield.protobuf.ProtoConvertable;
+import dev.volix.rewinside.odyssey.common.copperfield.protobuf.annotation.CopperProtoField;
 import dev.volix.rewinside.odyssey.common.copperfield.protobuf.annotation.CopperProtoType;
 import dev.volix.rewinside.odyssey.hagrid.protocol.party.PartyProtos;
 import java.time.ZonedDateTime;
@@ -25,26 +29,31 @@ import org.bson.types.ObjectId;
 @CopperProtoType(type = PartyProtos.Party.class)
 public class Party implements BsonConvertable, ProtoConvertable<PartyProtos.Party> {
 
-    @CopperBsonField(name = "_id") // TODO: write proto converter
+    @CopperBsonField(name = "_id")
+    @CopperProtoField(name = "id", converter = ObjectIdToStringConverter.class)
     public ObjectId id;
 
     @CopperField(name = "created_at")
-    @CopperIgnore(convertables = { BsonConvertable.class })
+    @CopperProtoField(converter = ZonedDateTimeToStringConverter.class)
     public ZonedDateTime createdAt;
 
     @CopperField(name = "leader_uuid", converter = PartyLeaderToUuidStringConverter.class)
     public PartyMember leader;
 
-    @CopperField(name = "members") @CopperIterableType(innerType = PartyMember.class)
+    @CopperField(name = "members")
+    @CopperIterableType(innerType = PartyMember.class)
     public List<PartyMember> members = new ArrayList<>();
 
-    @CopperBsonField(name = "settings") @CopperMapTypes(keyType = String.class, valueType = Object.class) // TODO: write proto converter
+    @CopperBsonField(name = "settings") // TODO: write proto converter
+    @CopperMapTypes(keyType = String.class, valueType = Object.class)
     public Map<String, Object> settings = new HashMap<>();
 
-    @CopperField(name = "banned_uuids") @CopperIterableType(innerType = UUID.class)
+    @CopperField(name = "banned_uuids")
+    @CopperIterableType(innerType = UUID.class)
     public List<UUID> bannedUuids = new ArrayList<>();
 
-    @CopperField(name = "events") @CopperIterableType(innerType = PartyEvent.class)
+    @CopperField(name = "events")
+    @CopperIterableType(innerType = PartyEvent.class)
     public List<PartyEvent> events = new ArrayList<>();
 
 }

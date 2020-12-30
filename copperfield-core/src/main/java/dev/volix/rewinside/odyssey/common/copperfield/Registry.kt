@@ -4,9 +4,9 @@ import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperField
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperIgnore
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperIterableType
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperMapTypes
-import dev.volix.rewinside.odyssey.common.copperfield.converter.AutoConverter
 import dev.volix.rewinside.odyssey.common.copperfield.converter.Converter
 import dev.volix.rewinside.odyssey.common.copperfield.converter.ConvertibleConverter
+import dev.volix.rewinside.odyssey.common.copperfield.converter.CopperFieldOrAutoConverter
 import dev.volix.rewinside.odyssey.common.copperfield.converter.IterableConverter
 import dev.volix.rewinside.odyssey.common.copperfield.converter.MapConverter
 import dev.volix.rewinside.odyssey.common.copperfield.converter.NoOpConverter
@@ -26,7 +26,7 @@ abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourT
         private val FALLBACK_CONVERTER = NoOpConverter()
     }
 
-    private val annotations = mutableMapOf<Class<out Annotation>, CopperFieldAnnotationHelper>()
+    private val annotations = LinkedHashMap<Class<out Annotation>, CopperFieldAnnotationHelper>()
 
     private val defaultConverters = LinkedHashMap<Class<*>, Converter<*, *>>()
     private val converters = mutableMapOf<Class<out Converter<*, *>>, Converter<*, *>>()
@@ -148,23 +148,25 @@ abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourT
 
     protected open fun getName(field: Field): String {
         var name = ""
-        this.annotations.forEach { (type, helper) ->
+        this.annotations.entries.forEach { (type, helper) ->
             val annotation = field.getDeclaredAnnotation(type) ?: return@forEach
             val annotationName = helper.getName(annotation)
             if (annotationName.isEmpty()) return@forEach
             name = annotationName
         }
-        if (name.isEmpty()) throw IllegalStateException("No valid name has been set for field ${field.name}.")
+        if (name.isEmpty()) throw IllegalStateException("No valid name has been set for field: ${field.name}")
         return name
     }
 
     protected open fun getConverterType(field: Field): Class<Converter<Any, Any>> {
-        var converter: Class<Converter<Any, Any>> = AutoConverter::class.java as Class<Converter<Any, Any>>
-        this.annotations.forEach { (type, helper) ->
+        var converterType: Class<Converter<Any, Any>>? = null
+        this.annotations.entries.forEach { (type, helper) ->
             val annotation = field.getDeclaredAnnotation(type) ?: return@forEach
-            converter = helper.getConverter(annotation)
+            val annotationConverterType = helper.getConverter(annotation)
+            if (annotationConverterType == CopperFieldOrAutoConverter::class.java && converterType != null) return@forEach
+            converterType = annotationConverterType
         }
-        return converter
+        return converterType ?: throw IllegalStateException("Unable to find valid converter for field: ${field.name}")
     }
 
     protected open fun <T : OurType> createOurs(type: Class<out T>) = type.newInstance()

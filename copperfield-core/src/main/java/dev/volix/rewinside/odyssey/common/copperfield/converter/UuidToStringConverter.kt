@@ -7,7 +7,7 @@ import java.util.UUID
 /**
  * @author Benedikt Wüller
  */
-class UuidToStringConverter : Converter<UUID, String>(UUID::class.java, String::class.java) {
+open class UuidToStringConverter : Converter<UUID, String>(UUID::class.java, String::class.java) {
 
     override fun toTheirs(value: UUID?, field: Field?, registry: Registry<*, *>, type: Class<out UUID>): String? {
         if (value == null) return null

@@ -1,15 +1,12 @@
 package dev.volix.rewinside.odyssey.common.copperfield.benchmark;
 
-import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperField;
 import dev.volix.rewinside.odyssey.common.copperfield.benchmark.party.Party;
 import dev.volix.rewinside.odyssey.common.copperfield.benchmark.party.PartyEvent;
 import dev.volix.rewinside.odyssey.common.copperfield.benchmark.party.PartyMember;
 import dev.volix.rewinside.odyssey.common.copperfield.bson.BsonRegistry;
-import dev.volix.rewinside.odyssey.common.copperfield.converter.ZonedDateTimeToStringConverter;
 import dev.volix.rewinside.odyssey.common.copperfield.protobuf.ProtoRegistry;
 import dev.volix.rewinside.odyssey.hagrid.protocol.party.PartyProtos;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.UUID;
 import org.bson.Document;
@@ -18,13 +15,11 @@ import org.bson.types.ObjectId;
 /**
  * @author Benedikt Wüller
  */
-public class Benchmark {
+public class Example {
 
     public static void main(String[] args) {
         final BsonRegistry bsonRegistry = new BsonRegistry();
-
         final ProtoRegistry protoRegistry = new ProtoRegistry();
-        protoRegistry.setConverter(ZonedDateTime.class, new ZonedDateTimeToStringConverter()); // not required when using real timestamps.
 
         final Party party = createParty();
 

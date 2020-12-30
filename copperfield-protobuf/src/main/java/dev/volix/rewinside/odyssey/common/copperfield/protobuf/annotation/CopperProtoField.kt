@@ -1,7 +1,7 @@
 package dev.volix.rewinside.odyssey.common.copperfield.protobuf.annotation
 
-import dev.volix.rewinside.odyssey.common.copperfield.converter.AutoConverter
 import dev.volix.rewinside.odyssey.common.copperfield.converter.Converter
+import dev.volix.rewinside.odyssey.common.copperfield.converter.CopperFieldOrAutoConverter
 import kotlin.reflect.KClass
 
 /**
@@ -9,4 +9,4 @@ import kotlin.reflect.KClass
  */
 @Target(AnnotationTarget.FIELD)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class CopperProtoField(val name: String, val converter: KClass<out Converter<*, *>> = AutoConverter::class)
+annotation class CopperProtoField(val name: String = "", val converter: KClass<out Converter<*, *>> = CopperFieldOrAutoConverter::class)

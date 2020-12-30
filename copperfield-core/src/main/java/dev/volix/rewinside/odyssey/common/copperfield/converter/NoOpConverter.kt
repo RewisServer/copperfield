@@ -6,7 +6,7 @@ import java.lang.reflect.Field
 /**
  * @author Benedikt Wüller
  */
-class NoOpConverter : Converter<Any, Any>(Any::class.java, Any::class.java) {
+open class NoOpConverter : Converter<Any, Any>(Any::class.java, Any::class.java) {
 
     override fun toTheirs(value: Any?, field: Field?, registry: Registry<*, *>, type: Class<out Any>): Any? = value
 

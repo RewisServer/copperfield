@@ -7,7 +7,7 @@ import java.lang.reflect.Field
 /**
  * @author Benedikt Wüller
  */
-class MapConverter : Converter<Map<*, *>, Map<*, *>>(Map::class.java, Map::class.java) {
+open class MapConverter : Converter<Map<*, *>, Map<*, *>>(Map::class.java, Map::class.java) {
 
     override fun toTheirs(value: Map<*, *>?, field: Field?, registry: Registry<*, *>, type: Class<out Map<*, *>>): Map<*, *>? {
         if (value == null) return mapOf<Any, Any>()
