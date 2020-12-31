@@ -1,5 +1,6 @@
 package dev.volix.rewinside.odyssey.common.copperfield
 
+import com.google.common.cache.CacheBuilder
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperField
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperIgnore
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperIterableType
@@ -14,6 +15,7 @@ import dev.volix.rewinside.odyssey.common.copperfield.converter.NumberConverter
 import dev.volix.rewinside.odyssey.common.copperfield.converter.UuidToStringConverter
 import java.lang.reflect.Field
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Benedikt Wüller
@@ -29,7 +31,9 @@ abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourT
     private val defaultConverters = LinkedHashMap<Class<*>, Converter<*, *>>()
     private val converters = mutableMapOf<Class<out Converter<*, *>>, Converter<*, *>>()
 
-    private val fieldDefinitions = mutableMapOf<Class<*>, List<FieldDefinition>>()
+    private val fieldDefinitionCache = CacheBuilder.newBuilder()
+        .expireAfterAccess(5, TimeUnit.MINUTES)
+        .build<Class<*>, List<FieldDefinition>>()
 
     init {
         // Register annotation.
@@ -112,7 +116,7 @@ abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourT
     }
 
     private fun getFieldDefinitions(type: Class<out OurType>): List<FieldDefinition> {
-        return this.fieldDefinitions.getOrPut(type) {
+        return this.fieldDefinitionCache.getOrPut(type) {
             return@getOrPut this.findFields(type).map {
                 val name = this.getName(it)
 
@@ -175,7 +179,7 @@ abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourT
     protected abstract fun writeValue(name: String, value: Any?, entity: TheirType, type: Class<out Any>)
 
     protected open fun clearCache() {
-        this.fieldDefinitions.clear()
+        this.fieldDefinitionCache.clear()
     }
 
 }

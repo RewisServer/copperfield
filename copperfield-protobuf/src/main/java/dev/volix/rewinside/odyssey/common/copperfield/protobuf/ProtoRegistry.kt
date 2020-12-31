@@ -1,9 +1,12 @@
 package dev.volix.rewinside.odyssey.common.copperfield.protobuf
 
+import com.google.common.cache.CacheBuilder
 import com.google.protobuf.GeneratedMessageV3
 import com.google.protobuf.MessageOrBuilder
 import com.google.protobuf.Struct
 import dev.volix.rewinside.odyssey.common.copperfield.Registry
+import dev.volix.rewinside.odyssey.common.copperfield.clear
+import dev.volix.rewinside.odyssey.common.copperfield.getOrPut
 import dev.volix.rewinside.odyssey.common.copperfield.protobuf.annotation.CopperProtoField
 import dev.volix.rewinside.odyssey.common.copperfield.protobuf.annotation.CopperProtoType
 import dev.volix.rewinside.odyssey.common.copperfield.protobuf.converter.ByteArrayToByteStringConverter
@@ -13,14 +16,20 @@ import dev.volix.rewinside.odyssey.common.copperfield.snakeToPascalCase
 import java.lang.reflect.Method
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Benedikt Wüller
  */
 class ProtoRegistry : Registry<ProtoConvertable<*>, MessageOrBuilder>(ProtoConvertable::class.java, MessageOrBuilder::class.java) {
 
-    private val getterMethods = mutableMapOf<Pair<String, Class<*>>, Method>()
-    private val setterMethods = mutableMapOf<Pair<String, Class<*>>, Method>()
+    private val getterMethods = CacheBuilder.newBuilder()
+        .expireAfterAccess(5, TimeUnit.MINUTES)
+        .build<Pair<String, Class<*>>, Method>()
+
+    private val setterMethods = CacheBuilder.newBuilder()
+        .expireAfterAccess(5, TimeUnit.MINUTES)
+        .build<Pair<String, Class<*>>, Method>()
 
     init {
         // Register additional annotation.
