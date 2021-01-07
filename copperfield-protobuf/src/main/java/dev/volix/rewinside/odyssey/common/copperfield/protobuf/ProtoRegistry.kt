@@ -6,6 +6,7 @@ import com.google.protobuf.MessageOrBuilder
 import com.google.protobuf.Struct
 import dev.volix.rewinside.odyssey.common.copperfield.Registry
 import dev.volix.rewinside.odyssey.common.copperfield.clear
+import dev.volix.rewinside.odyssey.common.copperfield.converter.EnumToStringConverter
 import dev.volix.rewinside.odyssey.common.copperfield.getOrPut
 import dev.volix.rewinside.odyssey.common.copperfield.protobuf.annotation.CopperProtoField
 import dev.volix.rewinside.odyssey.common.copperfield.protobuf.annotation.CopperProtoType
@@ -19,6 +20,17 @@ import java.time.ZonedDateTime
 import java.util.concurrent.TimeUnit
 
 /**
+ * Additional annotation: [CopperProtoField]. Use it in addition to [dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperField]
+ * or as an alternative.
+ *
+ * Additional/replacement [dev.volix.rewinside.odyssey.common.copperfield.converter.Converter]s:
+ *   - [Map] using [MapToProtoStructConverter]
+ *   - [ByteArray] using [ByteArrayToByteStringConverter]
+ *   - [Enum] using [EnumToStringConverter]
+ *   - [ZonedDateTime] using [ZonedDateTimeToProtoTimestampConverter] with timezone `Europe/Berlin`.
+ *
+ * @see Registry
+ *
  * @author Benedikt Wüller
  */
 class ProtoRegistry : Registry<ProtoConvertable<*>, MessageOrBuilder>(ProtoConvertable::class.java, MessageOrBuilder::class.java) {

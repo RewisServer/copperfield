@@ -6,6 +6,8 @@ import dev.volix.rewinside.odyssey.common.copperfield.converter.Converter
 import java.lang.reflect.Field
 
 /**
+ * Converts byte arrays to/from [ByteString]s.
+ *
  * @author Benedikt Wüller
  */
 class ByteArrayToByteStringConverter : Converter<ByteArray, ByteString>(ByteArray::class.java, ByteString::class.java) {

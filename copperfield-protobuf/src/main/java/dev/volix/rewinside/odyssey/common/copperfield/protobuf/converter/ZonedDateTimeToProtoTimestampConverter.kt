@@ -9,6 +9,9 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 
 /**
+ * Converts [ZonedDateTime]s to/from [Timestamp]s using the given [timeZone].
+ * All dates passed to this converter are assumed to share the same [timeZone].
+ *
  * @author Benedikt Wüller
  */
 open class ZonedDateTimeToProtoTimestampConverter(private val timeZone: ZoneId) : Converter<ZonedDateTime, Timestamp>(ZonedDateTime::class.java, Timestamp::class.java) {
