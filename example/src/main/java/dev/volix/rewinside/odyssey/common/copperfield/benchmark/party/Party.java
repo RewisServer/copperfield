@@ -38,7 +38,7 @@ public class Party implements BsonConvertable, ProtoConvertable<PartyProtos.Part
     public PartyMember leader;
 
     @CopperField(name = "members")
-    @CopperIterableType(innerType = PartyMember.class)
+    @CopperIterableType(valueType = PartyMember.class)
     public List<PartyMember> members = new ArrayList<>();
 
     @CopperField(name = "settings")
@@ -46,11 +46,11 @@ public class Party implements BsonConvertable, ProtoConvertable<PartyProtos.Part
     public Map<String, Object> settings = new HashMap<>();
 
     @CopperField(name = "banned_uuids")
-    @CopperIterableType(innerType = UUID.class)
+    @CopperIterableType(valueType = UUID.class)
     public List<UUID> bannedUuids = new ArrayList<>();
 
     @CopperField(name = "events")
-    @CopperIterableType(innerType = PartyEvent.class)
+    @CopperIterableType(valueType = PartyEvent.class)
     public List<PartyEvent> events = new ArrayList<>();
 
     @CopperBsonField(name = "status")

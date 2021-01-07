@@ -5,6 +5,8 @@ import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperMapTypes
 import java.lang.reflect.Field
 
 /**
+ * Converts [Map]s to a new [Map] with transformed keys and values based on the defined [CopperMapTypes] converters.
+ *
  * @author Benedikt Wüller
  */
 open class MapConverter : Converter<Map<*, *>, Map<*, *>>(Map::class.java, Map::class.java) {

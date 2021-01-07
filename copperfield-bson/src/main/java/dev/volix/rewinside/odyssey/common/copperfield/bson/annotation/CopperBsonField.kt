@@ -1,7 +1,7 @@
 package dev.volix.rewinside.odyssey.common.copperfield.bson.annotation
 
 import dev.volix.rewinside.odyssey.common.copperfield.converter.Converter
-import dev.volix.rewinside.odyssey.common.copperfield.converter.CopperFieldOrAutoConverter
+import dev.volix.rewinside.odyssey.common.copperfield.converter.FallbackAutoConverter
 import kotlin.reflect.KClass
 
 /**
@@ -9,4 +9,4 @@ import kotlin.reflect.KClass
  */
 @Target(AnnotationTarget.FIELD)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class CopperBsonField(val name: String = "", val converter: KClass<out Converter<*, *>> = CopperFieldOrAutoConverter::class)
+annotation class CopperBsonField(val name: String = "", val converter: KClass<out Converter<*, *>> = FallbackAutoConverter::class)

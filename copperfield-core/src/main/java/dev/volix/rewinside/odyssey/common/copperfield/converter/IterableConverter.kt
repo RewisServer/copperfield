@@ -5,6 +5,8 @@ import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperIterableT
 import java.lang.reflect.Field
 
 /**
+ * Converts [Iterable]s to a new [Iterable] with transformed values based on the defined [CopperIterableType.valueConverter].
+ *
  * @author Benedikt Wüller
  */
 open class IterableConverter : Converter<Iterable<*>, Iterable<*>>(Iterable::class.java, Iterable::class.java) {
@@ -26,9 +28,9 @@ open class IterableConverter : Converter<Iterable<*>, Iterable<*>>(Iterable::cla
                 ?: throw IllegalStateException("Iterables using the default IterableConverter must annotate @CopperIterableType: ${field.name}")
         }
 
-        val type = annotation?.innerType?.java ?: Any::class.java
+        val type = annotation?.valueType?.java ?: Any::class.java
         val converter = if (annotation != null) {
-            registry.getConverterByConverterType(annotation.innerConverter.java)
+            registry.getConverterByConverterType(annotation.valueConverter.java)
         } else {
             registry.getConverterByValueType(type)
         }

@@ -4,6 +4,8 @@ import dev.volix.rewinside.odyssey.common.copperfield.Registry
 import java.lang.reflect.Field
 
 /**
+ * Uses the [Registry] to dynamically determine and use the matching [Converter] based on the type of the given value.
+ *
  * @author Benedikt Wüller
  */
 open class AutoConverter : Converter<Any, Any>(Any::class.java, Any::class.java) {

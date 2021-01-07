@@ -5,6 +5,8 @@ import java.lang.reflect.Field
 import java.util.UUID
 
 /**
+ * Converts [UUID]s to strings and vice versa.
+ *
  * @author Benedikt Wüller
  */
 open class UuidToStringConverter : Converter<UUID, String>(UUID::class.java, String::class.java) {

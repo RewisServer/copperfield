@@ -17,7 +17,7 @@ public class Example {
         final BsonRegistry bsonRegistry = new BsonRegistry();
 
         final ProtoRegistry protoRegistry = new ProtoRegistry();
-        protoRegistry.setConverter(ObjectId.class, ObjectIdToStringConverter.class);
+        protoRegistry.setDefaultConverter(ObjectId.class, ObjectIdToStringConverter.class);
 
         final Party party = PartyUtil.createParty();
 

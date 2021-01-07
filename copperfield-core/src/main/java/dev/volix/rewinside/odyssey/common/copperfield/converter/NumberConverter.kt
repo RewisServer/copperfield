@@ -4,6 +4,8 @@ import dev.volix.rewinside.odyssey.common.copperfield.Registry
 import java.lang.reflect.Field
 
 /**
+ * Makes sure the [Number]s are converted to the right type when converting `theirs` to `ours`.
+ *
  * @author Benedikt Wüller
  */
 open class NumberConverter : Converter<Number, Number>(Number::class.java, Number::class.java) {

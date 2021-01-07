@@ -36,9 +36,9 @@ class ProtoRegistry : Registry<ProtoConvertable<*>, MessageOrBuilder>(ProtoConve
         this.registerAnnotation(CopperProtoField::class.java)
 
         // Register additional/replacement converters.
-        this.setConverter(Map::class.java, MapToProtoStructConverter::class.java)
-        this.setConverter(ByteArray::class.java, ByteArrayToByteStringConverter::class.java)
-        this.setConverter(ZonedDateTime::class.java, ZonedDateTimeToProtoTimestampConverter(ZoneId.of("Europe/Berlin")))
+        this.setDefaultConverter(Map::class.java, MapToProtoStructConverter::class.java)
+        this.setDefaultConverter(ByteArray::class.java, ByteArrayToByteStringConverter::class.java)
+        this.setDefaultConverter(ZonedDateTime::class.java, ZonedDateTimeToProtoTimestampConverter(ZoneId.of("Europe/Berlin")))
     }
 
     override fun createTheirs(convertible: ProtoConvertable<*>): MessageOrBuilder {
@@ -54,11 +54,11 @@ class ProtoRegistry : Registry<ProtoConvertable<*>, MessageOrBuilder>(ProtoConve
         return instance.javaClass.getDeclaredMethod("build").invoke(instance) as MessageOrBuilder
     }
 
-    override fun readValue(name: String, entity: MessageOrBuilder, type: Class<out Any>): Any? {
+    override fun readTheirValue(name: String, entity: MessageOrBuilder, type: Class<out Any>): Any? {
         return this.getGetterMethod(name, entity.javaClass, type).invoke(entity)
     }
 
-    override fun writeValue(name: String, value: Any?, entity: MessageOrBuilder, type: Class<out Any>) {
+    override fun writeTheirValue(name: String, value: Any?, entity: MessageOrBuilder, type: Class<out Any>) {
         val correctedType = if (type == Map::class.java && value is Struct) Struct::class.java else type
         this.getSetterMethod(name, entity.javaClass, correctedType).invoke(entity, value)
     }

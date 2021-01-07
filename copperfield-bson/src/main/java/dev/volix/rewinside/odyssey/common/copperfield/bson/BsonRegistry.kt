@@ -7,6 +7,7 @@ import dev.volix.rewinside.odyssey.common.copperfield.converter.EnumToStringConv
 import dev.volix.rewinside.odyssey.common.copperfield.converter.ZonedDateTimeToStringConverter
 import org.bson.Document
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 /**
  * @author Benedikt Wüller
@@ -18,18 +19,18 @@ class BsonRegistry : Registry<BsonConvertable, Document>(BsonConvertable::class.
         this.registerAnnotation(CopperBsonField::class.java)
 
         // Register additional/replacement converters.
-        this.setConverter(ByteArray::class.java, ByteArrayToBsonBinaryConverter::class.java)
-        this.setConverter(Enum::class.java, EnumToStringConverter::class.java)
-        this.setConverter(ZonedDateTime::class.java, ZonedDateTimeToStringConverter::class.java)
+        this.setDefaultConverter(ByteArray::class.java, ByteArrayToBsonBinaryConverter::class.java)
+        this.setDefaultConverter(Enum::class.java, EnumToStringConverter::class.java)
+        this.setDefaultConverter(ZonedDateTime::class.java, ZonedDateTimeToStringConverter(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
     }
 
     override fun createTheirs(convertible: BsonConvertable) = Document()
 
-    override fun readValue(name: String, entity: Document, type: Class<out Any>): Any? {
+    override fun readTheirValue(name: String, entity: Document, type: Class<out Any>): Any? {
         return entity[name, type]
     }
 
-    override fun writeValue(name: String, value: Any?, entity: Document, type: Class<out Any>) {
+    override fun writeTheirValue(name: String, value: Any?, entity: Document, type: Class<out Any>) {
         entity[name] = value
     }
 

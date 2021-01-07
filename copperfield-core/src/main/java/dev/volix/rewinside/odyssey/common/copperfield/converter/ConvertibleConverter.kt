@@ -5,6 +5,8 @@ import dev.volix.rewinside.odyssey.common.copperfield.Registry
 import java.lang.reflect.Field
 
 /**
+ * Uses the [Registry] to convert child [Convertable]s.
+ *
  * @author Benedikt Wüller
  */
 open class ConvertibleConverter<OurType : Convertable, TheirType : Any>(ourType: Class<out OurType>, theirType: Class<out TheirType>)
