@@ -10,6 +10,8 @@ import kotlin.reflect.KClass
  * The [name] will be used as basis for the target name and may be modified to fit conventions based on the implementation.
  * If a [converter] is set, it will override the default behavior for this type of field, which is defined by the registry used.
  *
+ * @see dev.volix.rewinside.odyssey.common.copperfield.Registry
+ *
  * @author Benedikt Wüller
  */
 @Target(AnnotationTarget.FIELD)

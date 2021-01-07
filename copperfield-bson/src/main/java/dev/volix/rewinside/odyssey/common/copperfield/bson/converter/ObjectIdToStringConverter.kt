@@ -6,6 +6,8 @@ import org.bson.types.ObjectId
 import java.lang.reflect.Field
 
 /**
+ * Converts bson [ObjectId]s to/from their hex string representation.
+ *
  * @author Benedikt Wüller
  */
 open class ObjectIdToStringConverter : Converter<ObjectId, String>(ObjectId::class.java, String::class.java) {

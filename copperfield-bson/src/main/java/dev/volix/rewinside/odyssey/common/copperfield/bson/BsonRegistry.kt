@@ -10,6 +10,16 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 /**
+ * Additional annotation: [CopperBsonField]. Use it in addition to [dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperField]
+ * or as an alternative.
+ *
+ * Additional [dev.volix.rewinside.odyssey.common.copperfield.converter.Converter]s:
+ *   - [ByteArray] using [ByteArrayToBsonBinaryConverter]
+ *   - [Enum] using [EnumToStringConverter]
+ *   - [ZonedDateTime] using [ZonedDateTimeToStringConverter] and [DateTimeFormatter.ISO_OFFSET_DATE_TIME]
+ *
+ * @see Registry
+ *
  * @author Benedikt Wüller
  */
 class BsonRegistry : Registry<BsonConvertable, Document>(BsonConvertable::class.java, Document::class.java) {

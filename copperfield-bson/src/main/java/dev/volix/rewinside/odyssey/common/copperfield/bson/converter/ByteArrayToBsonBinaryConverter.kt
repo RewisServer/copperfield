@@ -6,6 +6,8 @@ import org.bson.types.Binary
 import java.lang.reflect.Field
 
 /**
+ * Converts byte arrays to/from bson [Binary] objects.
+ *
  * @author Benedikt Wüller
  */
 class ByteArrayToBsonBinaryConverter : Converter<ByteArray, Binary>(ByteArray::class.java, Binary::class.java) {

@@ -23,8 +23,9 @@ import java.util.concurrent.TimeUnit
  * or alternative annotations to set/override [CopperField.name] or [CopperField.converter] based on the
  * target format.
  *
- * Registries provide the functionality of replacing and adding default [Converter]s for given object types.
- * The following converters are registered by default (inheriting registries may override standard converters):
+ * Registries provide the functionality of replacing, adding and removing default [Converter]s for given
+ * object types. The following converters are registered by default (inheriting registries may override
+ * standard converters):
  *   - [Number] using [NumberConverter]
  *   - [UUID] using [UuidToStringConverter]
  *   - [Iterable] using [IterableConverter]
