@@ -35,10 +35,16 @@ import java.util.concurrent.TimeUnit
  */
 class ProtoRegistry : Registry<ProtoConvertable<*>, MessageOrBuilder>(ProtoConvertable::class.java, MessageOrBuilder::class.java) {
 
+    /**
+     * Cached methods used to receive the value from the [MessageOrBuilder].
+     */
     private val getterMethods = CacheBuilder.newBuilder()
         .expireAfterAccess(5, TimeUnit.MINUTES)
         .build<Pair<String, Class<*>>, Method>()
 
+    /**
+     * Cached methods used to provide the value for the [MessageOrBuilder].
+     */
     private val setterMethods = CacheBuilder.newBuilder()
         .expireAfterAccess(5, TimeUnit.MINUTES)
         .build<Pair<String, Class<*>>, Method>()
@@ -57,12 +63,14 @@ class ProtoRegistry : Registry<ProtoConvertable<*>, MessageOrBuilder>(ProtoConve
         val annotation = convertible.javaClass.getDeclaredAnnotation(CopperProtoType::class.java)
             ?: throw IllegalStateException("The annotation @CopperProtoType is required for ProtoConvertable: ${convertible.javaClass}")
 
+        // Create a builder instead of the final instance, because ProtoBuf only supports the builder pattern.
         val type = annotation.type.java
         val newBuilderMethod = type.getDeclaredMethod("newBuilder")
         return newBuilderMethod.invoke(null) as GeneratedMessageV3.Builder<*>
     }
 
     override fun <T : MessageOrBuilder> finalizeTheirs(instance: T): MessageOrBuilder {
+        // Convert the builder to a real message.
         return instance.javaClass.getDeclaredMethod("build").invoke(instance) as MessageOrBuilder
     }
 
@@ -75,6 +83,10 @@ class ProtoRegistry : Registry<ProtoConvertable<*>, MessageOrBuilder>(ProtoConve
         this.getSetterMethod(name, entity.javaClass, correctedType).invoke(entity, value)
     }
 
+    /**
+     * Finds and returns the method used to retrieve a value of [type] with the given [name] from the [entityType].
+     * Caches the method for further use.
+     */
     private fun getGetterMethod(name: String, entityType: Class<out Any>, type: Class<out Any>): Method {
         val key = name to type
         return this.getterMethods.getOrPut(key) {
@@ -86,6 +98,10 @@ class ProtoRegistry : Registry<ProtoConvertable<*>, MessageOrBuilder>(ProtoConve
         }
     }
 
+    /**
+     * Finds and returns the method used to provide a value of [type] with the given [name] for the [entityType].
+     * Caches the method for further use.
+     */
     private fun getSetterMethod(name: String, entityType: Class<out MessageOrBuilder>, type: Class<out Any>): Method {
         val key = name to type
         return this.setterMethods.getOrPut(key) {

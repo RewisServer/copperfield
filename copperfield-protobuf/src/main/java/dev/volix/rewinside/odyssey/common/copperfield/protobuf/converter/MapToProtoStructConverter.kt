@@ -39,6 +39,10 @@ class MapToProtoStructConverter : Converter<Map<*, *>, Struct>(Map::class.java, 
         return this.converter.toOurs(map, field, registry, type)
     }
 
+    /**
+     * Recursively converts [map] values to [Value]s.
+     * Returns a new map.
+     */
     private fun convertMapToStruct(map: Map<*, *>): Struct {
         return Struct.newBuilder().putAllFields(
             map.mapKeys { (key, _) ->
@@ -48,18 +52,31 @@ class MapToProtoStructConverter : Converter<Map<*, *>, Struct>(Map::class.java, 
         ).build()
     }
 
+    /**
+     * Recursively converts the [struct] to a map.
+     * Returns a new map.
+     */
     private fun convertStructToMap(struct: Struct): Map<String, Any?> {
         return struct.fieldsMap.mapValues { (_, value) -> this.convertFromValue(value) }
     }
 
+    /**
+     * Recursively converts the [iterable] to a [ListValue].
+     */
     private fun convertIterableToListValue(iterable: Iterable<*>): ListValue? {
         return ListValue.newBuilder().addAllValues(iterable.map(this::convertToValue)).build()
     }
 
+    /**
+     * Recursively converts the [value] to an iterable.
+     */
     private fun convertListValueToIterable(value: ListValue): Iterable<Any?> {
         return value.valuesList.map(this::convertFromValue)
     }
 
+    /**
+     * Converts the [value] to a single [Value] or [Struct] (potentially recursively).
+     */
     private fun convertToValue(value: Any?): Value {
         val builder = Value.newBuilder()
         when (value) {
@@ -76,6 +93,9 @@ class MapToProtoStructConverter : Converter<Map<*, *>, Struct>(Map::class.java, 
         return builder.build()
     }
 
+    /**
+     * Converts the [value] to an object of the corresponding type (potentially recursively).
+     */
     private fun convertFromValue(value: Value): Any? {
         return when (value.kindCase) {
             Value.KindCase.NULL_VALUE -> null
