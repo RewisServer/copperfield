@@ -8,6 +8,7 @@ import kotlin.reflect.KClass
  * Flags this field to be included in the conversion process.
  *
  * The [name] will be used as basis for the target name and may be modified to fit conventions based on the implementation.
+ * If the [name] is an empty string, the java field name will be used and converted to snake case.
  * If a [converter] is set, it will override the default behavior for this type of field, which is defined by the registry used.
  *
  * @see dev.volix.rewinside.odyssey.common.copperfield.Registry
@@ -16,4 +17,4 @@ import kotlin.reflect.KClass
  */
 @Target(AnnotationTarget.FIELD)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class CopperField(val name: String, val converter: KClass<out Converter<*, *>> = AutoConverter::class)
+annotation class CopperField(val name: String = "", val converter: KClass<out Converter<*, *>> = AutoConverter::class)

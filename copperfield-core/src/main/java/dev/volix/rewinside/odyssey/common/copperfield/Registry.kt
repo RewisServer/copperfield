@@ -4,13 +4,14 @@ import com.google.common.cache.CacheBuilder
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperField
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperIgnore
 import dev.volix.rewinside.odyssey.common.copperfield.converter.Converter
-import dev.volix.rewinside.odyssey.common.copperfield.converter.ConvertibleConverter
+import dev.volix.rewinside.odyssey.common.copperfield.converter.EnumToStringConverter
 import dev.volix.rewinside.odyssey.common.copperfield.converter.FallbackAutoConverter
 import dev.volix.rewinside.odyssey.common.copperfield.converter.IterableConverter
 import dev.volix.rewinside.odyssey.common.copperfield.converter.MapConverter
 import dev.volix.rewinside.odyssey.common.copperfield.converter.NoOperationConverter
 import dev.volix.rewinside.odyssey.common.copperfield.converter.NumberConverter
 import dev.volix.rewinside.odyssey.common.copperfield.converter.UuidToStringConverter
+import dev.volix.rewinside.odyssey.common.copperfield.exception.CopperFieldException
 import java.lang.reflect.Field
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -28,6 +29,7 @@ import java.util.concurrent.TimeUnit
  * standard converters):
  *   - [Number] using [NumberConverter]
  *   - [UUID] using [UuidToStringConverter]
+ *   - [Enum] using [EnumToStringConverter]
  *   - [Iterable] using [IterableConverter]
  *   - [Map] using [MapConverter]
  *
@@ -68,6 +70,7 @@ abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourT
         // Register default converters.
         this.setDefaultConverter(Number::class.java, NumberConverter::class.java)
         this.setDefaultConverter(UUID::class.java, UuidToStringConverter::class.java)
+        this.setDefaultConverter(Enum::class.java, EnumToStringConverter::class.java)
         this.setDefaultConverter(Iterable::class.java, IterableConverter::class.java)
         this.setDefaultConverter(Map::class.java, MapConverter::class.java)
     }
@@ -117,11 +120,6 @@ abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourT
      * If there is no matching [Converter] the [FALLBACK_CONVERTER] will be returned.
      */
     fun <T : Any> getConverterByValueType(type: Class<T>): Converter<Any, Any> {
-        // Dynamically register converters for specific types extending [OurType].
-        if (this.ourType.isAssignableFrom(type) && !this.defaultConverters.containsKey(type)) {
-            this.setDefaultConverter(type, ConvertibleConverter(type as Class<out OurType>, this.theirType))
-        }
-
         // Find a matching converter and return the [FALLBACK_CONVERTER] if there is none.
         return (this.defaultConverters.entries.lastOrNull { (supportedType, _) ->
             return@lastOrNull supportedType.isAssignableFrom(type)
@@ -139,23 +137,12 @@ abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourT
      * Returns `null` if the [convertable] is `null`.
      */
     fun toTheirs(convertable: OurType?): TheirType? {
-        if (convertable == null) return null
-        val instance = this.createTheirs(convertable)
-
-        this.getFieldDefinitions(convertable.javaClass).forEach {
-            val value = it.field.get(convertable)
-            val convertedValue = it.converter.toTheirs(value, it.field, this, it.field.type)
-
-            val writeType = when {
-                it.isMap -> Map::class.java
-                it.isIterable -> Iterable::class.java
-                else -> convertedValue?.javaClass ?: it.converter.theirType
-            }
-
-            this.writeTheirValue(it.name, convertedValue, instance, writeType)
+        val converter = this.getConverterByValueType(this.ourType)
+        if (!this.theirType.isAssignableFrom(converter.theirType)) {
+            throw IllegalStateException("This registry does not contain a default converter for ${this.ourType.name}. "
+                    + "Register one or set a custom converter using @CopperClass.")
         }
-
-        return this.finalizeTheirs(instance)
+        return converter.toTheirs(convertable, null, this, convertable?.javaClass ?: this.ourType) as TheirType?
     }
 
     /**
@@ -163,22 +150,12 @@ abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourT
      * Returns `null` if the [entity] is `null`.
      */
     fun <T : OurType> toOurs(entity: TheirType?, type: Class<T>): T? {
-        if (entity == null) return null
-        val instance = this.createOurs(type)
-
-        this.getFieldDefinitions(type).forEach {
-            val readType = when {
-                it.isMap -> Map::class.java
-                it.isIterable -> Iterable::class.java
-                else -> it.converter.theirType
-            }
-
-            val value = this.readTheirValue(it.name, entity, readType)
-            val convertedValue = it.converter.toOurs(value, it.field, this, it.field.type)
-            it.field.set(instance, convertedValue)
+        val converter = this.getConverterByValueType(this.ourType)
+        if (!this.theirType.isAssignableFrom(converter.theirType)) {
+            throw IllegalStateException("This registry does not contain a default converter for ${this.ourType.name}. "
+                    + "Register one or set a custom converter using @CopperClass.")
         }
-
-        return instance
+        return converter.toOurs(entity, null, this, type) as T?
     }
 
     /**
@@ -188,7 +165,7 @@ abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourT
      *
      * The fields are cached to increase performance. To clear the cache, see [clearCache].
      */
-    private fun getFieldDefinitions(type: Class<out OurType>): List<FieldDefinition> {
+    fun getFieldDefinitions(type: Class<out OurType>): List<FieldDefinition> {
         return this.fieldDefinitionCache.getOrPut(type) {
             return@getOrPut this.findFields(type).map {
                 val name = this.getName(it)
@@ -244,8 +221,7 @@ abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourT
             if (annotationName.isEmpty()) return@forEach
             name = annotationName
         }
-        if (name.isEmpty()) throw IllegalStateException("No valid name has been set for field: ${field.name}")
-        return name
+        return if (name.isEmpty()) field.name.camelToSnakeCase() else name
     }
 
     /**
@@ -259,35 +235,8 @@ abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourT
             if (annotationConverterType == FallbackAutoConverter::class.java && converterType != null) return@forEach
             converterType = annotationConverterType
         }
-        return converterType ?: throw IllegalStateException("Unable to find valid converter for field: ${field.name}")
+        return converterType ?: throw CopperFieldException(this, field, "Unable to find valid converter.")
     }
-
-    /**
-     * Returns a new instance of [OurType].
-     */
-    protected open fun <T : OurType> createOurs(type: Class<out T>) = type.newInstance()
-
-    /**
-     * Returns a new instance of [TheirType].
-     */
-    protected abstract fun createTheirs(convertible: OurType): TheirType
-
-    /**
-     * Returns an instance of [TheirType] after some finalization on the [instance].
-     */
-    protected open fun <T : TheirType> finalizeTheirs(instance: T): TheirType = instance
-
-    /**
-     * Reads the value of the [entity] field with the name [name].
-     * The [type] represents the expected type to return.
-     */
-    protected abstract fun readTheirValue(name: String, entity: TheirType, type: Class<out Any>): Any?
-
-    /**
-     * Sets the [value] of the [entity] field with the name [name].
-     * The [type] represents the type of the [value] to set.
-     */
-    protected abstract fun writeTheirValue(name: String, value: Any?, entity: TheirType, type: Class<out Any>)
 
     /**
      * Clears every cache of this registry.

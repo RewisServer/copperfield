@@ -21,11 +21,11 @@ public class Example {
 
         final Party party = PartyUtil.createParty();
 
-        final PartyProtos.Party protoParty = (PartyProtos.Party) protoRegistry.toTheirs(party);
-        System.out.println(protoParty);
-
         final Document bsonParty = bsonRegistry.toTheirs(party);
         System.out.println(bsonParty.toJson());
+
+        final PartyProtos.Party protoParty = (PartyProtos.Party) protoRegistry.toTheirs(party);
+        System.out.println(protoParty);
 
         final Party protoPartyResult = protoRegistry.toOurs(protoParty, Party.class);
         final Party bsonPartyResult = bsonRegistry.toOurs(bsonParty, Party.class);

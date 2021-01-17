@@ -27,7 +27,7 @@ import org.bson.types.ObjectId;
 public class Party implements BsonConvertable, ProtoConvertable<PartyProtos.Party> {
 
     @CopperField(name = "id")
-    @CopperBsonField(name = "_id")
+    @CopperBsonField(name = "_id.party_id")
     public ObjectId id;
 
     @CopperField(name = "created_at")

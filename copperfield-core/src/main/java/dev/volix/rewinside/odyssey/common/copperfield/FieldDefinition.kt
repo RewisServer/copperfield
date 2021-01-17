@@ -10,7 +10,7 @@ import java.lang.reflect.Field
  *
  * @author Benedikt Wüller
  */
-internal data class FieldDefinition(val field: Field, val name: String, val converter: Converter<Any, Any>) {
+data class FieldDefinition(val field: Field, val name: String, val converter: Converter<Any, Any>) {
 
     val isMap = field.isAnnotationPresent(CopperMapTypes::class.java) && Map::class.java.isAssignableFrom(field.type)
     val isIterable = field.isAnnotationPresent(CopperIterableType::class.java) && Iterable::class.java.isAssignableFrom(field.type)
