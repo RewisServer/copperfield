@@ -2,8 +2,10 @@ package dev.volix.rewinside.odyssey.common.copperfield.protobuf.converter
 
 import com.google.common.cache.CacheBuilder
 import com.google.protobuf.GeneratedMessageV3
-import com.google.protobuf.MessageOrBuilder
+import com.google.protobuf.MessageLiteOrBuilder
 import com.google.protobuf.Struct
+import com.google.protobuf.StructOrBuilder
+import com.google.protobuf.Value
 import dev.volix.rewinside.odyssey.common.copperfield.Registry
 import dev.volix.rewinside.odyssey.common.copperfield.converter.AutoConverter
 import dev.volix.rewinside.odyssey.common.copperfield.converter.Converter
@@ -11,6 +13,8 @@ import dev.volix.rewinside.odyssey.common.copperfield.exception.CopperFieldExcep
 import dev.volix.rewinside.odyssey.common.copperfield.getOrPut
 import dev.volix.rewinside.odyssey.common.copperfield.protobuf.ProtoConvertable
 import dev.volix.rewinside.odyssey.common.copperfield.protobuf.annotation.CopperProtoType
+import dev.volix.rewinside.odyssey.common.copperfield.protobuf.convertFromValue
+import dev.volix.rewinside.odyssey.common.copperfield.protobuf.convertToValue
 import dev.volix.rewinside.odyssey.common.copperfield.snakeToPascalCase
 import java.lang.reflect.Field
 import java.lang.reflect.Method
@@ -19,27 +23,27 @@ import java.util.concurrent.TimeUnit
 /**
  * @author Benedikt Wüller
  */
-class ProtoConvertableConverter : Converter<ProtoConvertable<*>, MessageOrBuilder>(ProtoConvertable::class.java, MessageOrBuilder::class.java) {
+class ProtoConvertableConverter : Converter<ProtoConvertable<*>, MessageLiteOrBuilder>(ProtoConvertable::class.java, MessageLiteOrBuilder::class.java) {
 
     /**
-     * Cached methods used to receive the value from the [MessageOrBuilder].
+     * Cached methods used to receive the value from the [MessageLiteOrBuilder].
      */
     private val getterMethods = CacheBuilder.newBuilder()
         .expireAfterAccess(5, TimeUnit.MINUTES)
-        .build<Pair<String, Class<*>>, Method>()
+        .build<Triple<String, Class<*>, Class<*>>, Method>()
 
     /**
-     * Cached methods used to provide the value for the [MessageOrBuilder].
+     * Cached methods used to provide the value for the [MessageLiteOrBuilder].
      */
     private val setterMethods = CacheBuilder.newBuilder()
         .expireAfterAccess(5, TimeUnit.MINUTES)
-        .build<Pair<String, Class<*>>, Method>()
+        .build<Triple<String, Class<*>, Class<*>>, Method>()
 
-    override fun toTheirs(value: ProtoConvertable<*>?, field: Field?, registry: Registry<*, *>, type: Class<out ProtoConvertable<*>>): MessageOrBuilder {
+    override fun toTheirs(value: ProtoConvertable<*>?, field: Field?, registry: Registry<*, *>, type: Class<out ProtoConvertable<*>>): MessageLiteOrBuilder {
         val instance = createBuilder(type)
         if (value == null) return instance
 
-        (registry as Registry<ProtoConvertable<*>, MessageOrBuilder>).getFieldDefinitions(type).forEach {
+        (registry as Registry<ProtoConvertable<*>, MessageLiteOrBuilder>).getFieldDefinitions(type).forEach {
             val fieldValue = it.field.get(value)
 
             val convertedValue = try {
@@ -60,14 +64,14 @@ class ProtoConvertableConverter : Converter<ProtoConvertable<*>, MessageOrBuilde
         }
 
         // Convert the builder to a real message.
-        return instance.javaClass.getDeclaredMethod("build").invoke(instance) as MessageOrBuilder
+        return instance.javaClass.getDeclaredMethod("build").invoke(instance) as MessageLiteOrBuilder
     }
 
-    override fun toOurs(value: MessageOrBuilder?, field: Field?, registry: Registry<*, *>, type: Class<out ProtoConvertable<*>>): ProtoConvertable<*> {
+    override fun toOurs(value: MessageLiteOrBuilder?, field: Field?, registry: Registry<*, *>, type: Class<out ProtoConvertable<*>>): ProtoConvertable<*> {
         val instance = type.newInstance()
         if (value == null) return instance
 
-        (registry as Registry<ProtoConvertable<*>, MessageOrBuilder>).getFieldDefinitions(type).forEach {
+        (registry as Registry<ProtoConvertable<*>, MessageLiteOrBuilder>).getFieldDefinitions(type).forEach {
             val readType = when {
                 it.converter is AutoConverter && it.isMap -> Map::class.java
                 it.converter is AutoConverter && it.isIterable -> Iterable::class.java
@@ -100,13 +104,25 @@ class ProtoConvertableConverter : Converter<ProtoConvertable<*>, MessageOrBuilde
         return newBuilderMethod.invoke(null) as GeneratedMessageV3.Builder<*>
     }
 
-    private fun readTheirValue(name: String, entity: MessageOrBuilder, type: Class<out Any>): Any? {
-        return this.getGetterMethod(name, entity.javaClass, type).invoke(entity)
+    private fun readTheirValue(name: String, entity: MessageLiteOrBuilder, type: Class<out Any>): Any? {
+        val method = this.getGetterMethod(name, entity.javaClass, type)
+
+        return if (entity is StructOrBuilder) {
+            convertFromValue(method.invoke(entity, name, null) as Value)
+        } else {
+            method.invoke(entity)
+        }
     }
 
-    private fun writeTheirValue(name: String, value: Any?, entity: MessageOrBuilder, type: Class<out Any>) {
+    private fun writeTheirValue(name: String, value: Any?, entity: MessageLiteOrBuilder, type: Class<out Any>) {
         val correctedType = if (type == Map::class.java && value is Struct) Struct::class.java else type
-        this.getSetterMethod(name, entity.javaClass, correctedType).invoke(entity, value)
+        val method = this.getSetterMethod(name, entity.javaClass, correctedType)
+
+        if (entity is StructOrBuilder) {
+            method.invoke(entity, name, convertToValue(value))
+        } else {
+            method.invoke(entity, value)
+        }
     }
 
     /**
@@ -114,8 +130,12 @@ class ProtoConvertableConverter : Converter<ProtoConvertable<*>, MessageOrBuilde
      * Caches the method for further use.
      */
     private fun getGetterMethod(name: String, entityType: Class<out Any>, type: Class<out Any>): Method {
-        val key = name to type
+        val key = Triple(name, type, entityType)
         return this.getterMethods.getOrPut(key) {
+            if (StructOrBuilder::class.java.isAssignableFrom(entityType)) {
+                return@getOrPut entityType.getDeclaredMethod("getFieldsOrDefault", String::class.java, Value::class.java)
+            }
+
             val methodName = when {
                 Iterable::class.java.isAssignableFrom(type) -> "get${name.snakeToPascalCase()}List"
                 else -> "get${name.snakeToPascalCase()}"
@@ -128,9 +148,14 @@ class ProtoConvertableConverter : Converter<ProtoConvertable<*>, MessageOrBuilde
      * Finds and returns the method used to provide a value of [type] with the given [name] for the [entityType].
      * Caches the method for further use.
      */
-    private fun getSetterMethod(name: String, entityType: Class<out MessageOrBuilder>, type: Class<out Any>): Method {
-        val key = name to type
+    private fun getSetterMethod(name: String, entityType: Class<out MessageLiteOrBuilder>, type: Class<out Any>): Method {
+        val key = Triple(name, type, entityType)
         return this.setterMethods.getOrPut(key) {
+            if (StructOrBuilder::class.java.isAssignableFrom(entityType)) {
+                return@getOrPut entityType.getDeclaredMethod("putFields", String::class.java, Value::class.java)
+            }
+
+            Struct.newBuilder().build();
             val methodName = when {
                 Iterable::class.java.isAssignableFrom(type) -> "addAll${name.snakeToPascalCase()}"
                 else -> "set${name.snakeToPascalCase()}"

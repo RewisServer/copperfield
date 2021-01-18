@@ -26,8 +26,8 @@ public class PartyUtil {
 
         party.members.put(party.leader.uuid.toString(), party.leader);
 
-//        party.settings.put("max_size", 10);
-//        party.settings.put("topic", "BedWars");
+        party.settings.maxSize = 10;
+        party.settings.topic = "BedWars";
 
         party.events.add(createPartyEvent("WET"));
         party.events.add(createPartyEvent("ASS"));

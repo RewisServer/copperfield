@@ -13,7 +13,7 @@ import dev.volix.rewinside.odyssey.common.copperfield.protobuf.annotation.Copper
 public class PartySettings implements BsonConvertable, ProtoConvertable<Struct> {
 
     @CopperField
-    public int maxSize;
+    public Integer maxSize;
 
     @CopperField
     public String topic;

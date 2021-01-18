@@ -1,6 +1,6 @@
 package dev.volix.rewinside.odyssey.common.copperfield.protobuf
 
-import com.google.protobuf.MessageOrBuilder
+import com.google.protobuf.MessageLiteOrBuilder
 import dev.volix.rewinside.odyssey.common.copperfield.Registry
 import dev.volix.rewinside.odyssey.common.copperfield.protobuf.annotation.CopperProtoField
 import dev.volix.rewinside.odyssey.common.copperfield.protobuf.converter.ByteArrayToByteStringConverter
@@ -24,7 +24,7 @@ import java.time.ZonedDateTime
  *
  * @author Benedikt Wüller
  */
-open class ProtoRegistry : Registry<ProtoConvertable<*>, MessageOrBuilder>(ProtoConvertable::class.java, MessageOrBuilder::class.java) {
+open class ProtoRegistry : Registry<ProtoConvertable<*>, MessageLiteOrBuilder>(ProtoConvertable::class.java, MessageLiteOrBuilder::class.java) {
 
     init {
         // Register additional annotation.

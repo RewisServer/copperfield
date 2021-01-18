@@ -44,8 +44,8 @@ public class Party implements BsonConvertable, ProtoConvertable<PartyProtos.Part
     @CopperIterableType(valueType = PartyMember.class)
     public Map<String, PartyMember> members = new HashMap<>();
 
-//    @CopperField(name = "settings")
-//    public PartySettings settings = new PartySettings();
+    @CopperField(name = "settings")
+    public PartySettings settings = new PartySettings();
 
     @CopperField(name = "banned_uuids")
     @CopperIterableType(valueType = UUID.class)
