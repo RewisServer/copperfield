@@ -5,6 +5,7 @@ import com.google.protobuf.GeneratedMessageV3
 import com.google.protobuf.MessageOrBuilder
 import com.google.protobuf.Struct
 import dev.volix.rewinside.odyssey.common.copperfield.Registry
+import dev.volix.rewinside.odyssey.common.copperfield.converter.AutoConverter
 import dev.volix.rewinside.odyssey.common.copperfield.converter.Converter
 import dev.volix.rewinside.odyssey.common.copperfield.exception.CopperFieldException
 import dev.volix.rewinside.odyssey.common.copperfield.getOrPut
@@ -48,8 +49,10 @@ class ProtoConvertableConverter : Converter<ProtoConvertable<*>, MessageOrBuilde
             }
 
             val writeType = when {
-                it.isMap -> Map::class.java
-                it.isIterable -> Iterable::class.java
+                it.converter is AutoConverter && it.isMap -> Map::class.java
+                it.converter is AutoConverter && it.isIterable -> Iterable::class.java
+                Map::class.java.isAssignableFrom(it.converter.theirType) -> Map::class.java
+                Iterable::class.java.isAssignableFrom(it.converter.theirType) -> Iterable::class.java
                 else -> convertedValue?.javaClass ?: it.converter.theirType
             }
 
@@ -66,8 +69,10 @@ class ProtoConvertableConverter : Converter<ProtoConvertable<*>, MessageOrBuilde
 
         (registry as Registry<ProtoConvertable<*>, MessageOrBuilder>).getFieldDefinitions(type).forEach {
             val readType = when {
-                it.isMap -> Map::class.java
-                it.isIterable -> Iterable::class.java
+                it.converter is AutoConverter && it.isMap -> Map::class.java
+                it.converter is AutoConverter && it.isIterable -> Iterable::class.java
+                Map::class.java.isAssignableFrom(it.converter.theirType) -> Map::class.java
+                Iterable::class.java.isAssignableFrom(it.converter.theirType) -> Iterable::class.java
                 else -> it.converter.theirType
             }
 

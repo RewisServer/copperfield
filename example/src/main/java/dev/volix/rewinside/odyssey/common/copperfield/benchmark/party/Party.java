@@ -4,6 +4,7 @@ import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperField;
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperIterableType;
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperMapTypes;
 import dev.volix.rewinside.odyssey.common.copperfield.benchmark.converter.PartyLeaderToUuidStringConverter;
+import dev.volix.rewinside.odyssey.common.copperfield.benchmark.converter.PartyMembersMapConverter;
 import dev.volix.rewinside.odyssey.common.copperfield.bson.BsonConvertable;
 import dev.volix.rewinside.odyssey.common.copperfield.bson.annotation.CopperBsonField;
 import dev.volix.rewinside.odyssey.common.copperfield.converter.ZonedDateTimeToStringConverter;
@@ -38,12 +39,13 @@ public class Party implements BsonConvertable, ProtoConvertable<PartyProtos.Part
     public PartyMember leader;
 
     @CopperField(name = "members")
+    @CopperProtoField(converter = PartyMembersMapConverter.class)
+    @CopperMapTypes(keyType = String.class, valueType = PartyMember.class)
     @CopperIterableType(valueType = PartyMember.class)
-    public List<PartyMember> members = new ArrayList<>();
+    public Map<String, PartyMember> members = new HashMap<>();
 
-    @CopperField(name = "settings")
-    @CopperMapTypes(keyType = String.class, valueType = Object.class)
-    public Map<String, Object> settings = new HashMap<>();
+//    @CopperField(name = "settings")
+//    public PartySettings settings = new PartySettings();
 
     @CopperField(name = "banned_uuids")
     @CopperIterableType(valueType = UUID.class)
