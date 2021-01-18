@@ -44,23 +44,23 @@ class ProtoConvertableConverter : Converter<ProtoConvertable<*>, MessageLiteOrBu
         if (value == null) return instance
 
         (registry as Registry<ProtoConvertable<*>, MessageLiteOrBuilder>).getFieldDefinitions(type).forEach {
-            val fieldValue = it.field.get(value)
+            try {
+                val fieldValue = it.field.get(value)
 
-            val convertedValue = try {
-                it.converter.toTheirs(fieldValue, it.field, registry, it.field.type)
+                val convertedValue = it.converter.toTheirs(fieldValue, it.field, registry, it.field.type)
+
+                val writeType = when {
+                    it.converter is AutoConverter && it.isMap -> Map::class.java
+                    it.converter is AutoConverter && it.isIterable -> Iterable::class.java
+                    Map::class.java.isAssignableFrom(it.converter.theirType) -> Map::class.java
+                    Iterable::class.java.isAssignableFrom(it.converter.theirType) -> Iterable::class.java
+                    else -> convertedValue?.javaClass ?: it.converter.theirType
+                }
+
+                this.writeTheirValue(it.name, convertedValue, instance, writeType)
             } catch (ex: Exception) {
                 throw CopperFieldException(registry, it.field, "Unable to convert our value to theirs.", ex)
             }
-
-            val writeType = when {
-                it.converter is AutoConverter && it.isMap -> Map::class.java
-                it.converter is AutoConverter && it.isIterable -> Iterable::class.java
-                Map::class.java.isAssignableFrom(it.converter.theirType) -> Map::class.java
-                Iterable::class.java.isAssignableFrom(it.converter.theirType) -> Iterable::class.java
-                else -> convertedValue?.javaClass ?: it.converter.theirType
-            }
-
-            this.writeTheirValue(it.name, convertedValue, instance, writeType)
         }
 
         // Convert the builder to a real message.
@@ -72,23 +72,22 @@ class ProtoConvertableConverter : Converter<ProtoConvertable<*>, MessageLiteOrBu
         if (value == null) return instance
 
         (registry as Registry<ProtoConvertable<*>, MessageLiteOrBuilder>).getFieldDefinitions(type).forEach {
-            val readType = when {
-                it.converter is AutoConverter && it.isMap -> Map::class.java
-                it.converter is AutoConverter && it.isIterable -> Iterable::class.java
-                Map::class.java.isAssignableFrom(it.converter.theirType) -> Map::class.java
-                Iterable::class.java.isAssignableFrom(it.converter.theirType) -> Iterable::class.java
-                else -> it.converter.theirType
-            }
+            try {
+                val readType = when {
+                    it.converter is AutoConverter && it.isMap -> Map::class.java
+                    it.converter is AutoConverter && it.isIterable -> Iterable::class.java
+                    Map::class.java.isAssignableFrom(it.converter.theirType) -> Map::class.java
+                    Iterable::class.java.isAssignableFrom(it.converter.theirType) -> Iterable::class.java
+                    else -> it.converter.theirType
+                }
 
-            val fieldValue = this.readTheirValue(it.name, value, readType)
+                val fieldValue = this.readTheirValue(it.name, value, readType)
+                val convertedValue = it.converter.toOurs(fieldValue, it.field, registry, it.field.type) ?: return@forEach
 
-            val convertedValue = try {
-                it.converter.toOurs(fieldValue, it.field, registry, it.field.type) ?: return@forEach
+                it.field.set(instance, convertedValue)
             } catch (ex: Exception) {
                 throw CopperFieldException(registry, it.field, "Unable to convert their value to ours.", ex)
             }
-
-            it.field.set(instance, convertedValue)
         }
 
         return instance
