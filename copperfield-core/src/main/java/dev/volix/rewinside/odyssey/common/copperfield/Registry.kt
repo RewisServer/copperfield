@@ -137,12 +137,13 @@ abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourT
      * Returns `null` if the [convertable] is `null`.
      */
     fun toTheirs(convertable: OurType?): TheirType? {
-        val converter = this.getConverterByValueType(this.ourType)
+        val type = convertable?.javaClass ?: this.ourType
+        val converter = this.getConverterByValueType(type)
         if (!this.theirType.isAssignableFrom(converter.theirType)) {
             throw IllegalStateException("This registry does not contain a default converter for ${this.ourType.name}. "
                     + "Register one or set a custom converter using @CopperClass.")
         }
-        return converter.toTheirs(convertable, null, this, convertable?.javaClass ?: this.ourType) as TheirType?
+        return converter.toTheirs(convertable, null, this, type) as TheirType?
     }
 
     /**
@@ -150,7 +151,7 @@ abstract class Registry<OurType : Convertable, TheirType : Any>(private val ourT
      * Returns `null` if the [entity] is `null`.
      */
     fun <T : OurType> toOurs(entity: TheirType?, type: Class<T>): T? {
-        val converter = this.getConverterByValueType(this.ourType)
+        val converter = this.getConverterByValueType(type)
         if (!this.theirType.isAssignableFrom(converter.theirType)) {
             throw IllegalStateException("This registry does not contain a default converter for ${this.ourType.name}. "
                     + "Register one or set a custom converter using @CopperClass.")
