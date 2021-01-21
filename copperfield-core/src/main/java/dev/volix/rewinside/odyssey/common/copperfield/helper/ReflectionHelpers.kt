@@ -10,8 +10,8 @@ fun getAllFields(type: Class<*>): Collection<Field> {
     val fields = mutableListOf<Field>()
     var currentType: Class<*>? = type
     do {
-        fields.addAll(type.declaredFields)
-        currentType = currentType?.superclass
+        fields.addAll(currentType!!.declaredFields)
+        currentType = currentType.superclass
     } while (currentType != null)
     return fields
 }
