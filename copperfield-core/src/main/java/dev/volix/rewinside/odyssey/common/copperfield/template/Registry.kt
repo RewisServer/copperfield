@@ -5,7 +5,7 @@ import dev.volix.rewinside.odyssey.common.copperfield.converter.Converter
 /**
  * @author Benedikt Wüller
  */
-abstract class Template {
+abstract class Registry {
 
     companion object {
         private val CONVERTERS = mutableMapOf<Class<out Converter<*, *>>, Converter<*, *>>()
@@ -19,12 +19,12 @@ abstract class Template {
     protected val converterTypes = mutableMapOf<Class<*>, MutableMap<Class<*>, Class<out Converter<*, *>>>>()
 
     @JvmOverloads
-    fun with(ourType: Class<*>, converterType: Class<out Converter<*, *>>, targetFormat: Class<*>? = null): Template {
+    fun with(ourType: Class<*>, converterType: Class<out Converter<*, *>>, targetFormat: Class<*>? = null): Registry {
         return this.with(ourType, Companion.getConverter(converterType), targetFormat)
     }
 
     @JvmOverloads
-    fun with(ourType: Class<*>, converter: Converter<out Any, out Any>, targetFormat: Class<*>? = null): Template {
+    fun with(ourType: Class<*>, converter: Converter<out Any, out Any>, targetFormat: Class<*>? = null): Registry {
         CONVERTERS[converter.javaClass] = converter
         if (targetFormat == null) {
             this.defaultConverterTypes[ourType] = converter.javaClass
@@ -34,14 +34,14 @@ abstract class Template {
         return this
     }
 
-    fun with(other: Template): Template {
+    fun with(other: Registry): Registry {
         this.defaultConverterTypes.putAll(other.defaultConverterTypes)
         other.converterTypes.forEach { (ourType, converterTypes) -> this.converterTypes.getOrPut(ourType) { mutableMapOf() }.putAll(converterTypes) }
         return this
     }
 
     @JvmOverloads
-    fun without(ourType: Class<*>, targetFormat: Class<*>? = null): Template {
+    fun without(ourType: Class<*>, targetFormat: Class<*>? = null): Registry {
         if (targetFormat == null) {
             this.defaultConverterTypes.remove(ourType)
         } else {
@@ -80,7 +80,7 @@ abstract class Template {
 
     fun getConverter(ourType: Class<*>, targetFormat: Class<*>? = null): Converter<*, *>? {
         val converterType = this.getConverterType(ourType, targetFormat) ?: return null
-        return Template.getConverter(converterType)
+        return Registry.getConverter(converterType)
     }
 
 }

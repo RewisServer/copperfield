@@ -1,6 +1,6 @@
 package dev.volix.rewinside.odyssey.common.copperfield.converter
 
-import dev.volix.rewinside.odyssey.common.copperfield.Registry
+import dev.volix.rewinside.odyssey.common.copperfield.CopperfieldAgent
 import java.lang.reflect.Field
 
 /**
@@ -8,8 +8,8 @@ import java.lang.reflect.Field
  */
 class NoOperationConverter : Converter<Any, Any>(Any::class.java, Any::class.java) {
 
-    override fun toTheirs(value: Any?, registry: Registry, ourType: Class<out Any>, targetFormatType: Class<*>, field: Field?) = value
+    override fun toTheirs(value: Any?, agent: CopperfieldAgent, ourType: Class<out Any>, targetFormat: Class<Any>, field: Field?) = value
 
-    override fun toOurs(value: Any?, registry: Registry, ourType: Class<out Any>, targetFormatType: Class<*>, field: Field?) = value
+    override fun toOurs(value: Any?, agent: CopperfieldAgent, ourType: Class<out Any>, targetFormat: Class<Any>, field: Field?) = value
 
 }

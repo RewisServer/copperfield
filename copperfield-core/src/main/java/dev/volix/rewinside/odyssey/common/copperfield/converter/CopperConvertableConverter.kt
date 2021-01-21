@@ -2,7 +2,7 @@ package dev.volix.rewinside.odyssey.common.copperfield.converter
 
 import dev.volix.rewinside.odyssey.common.copperfield.CopperConvertable
 import dev.volix.rewinside.odyssey.common.copperfield.CopperFieldDefinition
-import dev.volix.rewinside.odyssey.common.copperfield.Registry
+import dev.volix.rewinside.odyssey.common.copperfield.CopperfieldAgent
 import dev.volix.rewinside.odyssey.common.copperfield.TypeMapper
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperField
 import dev.volix.rewinside.odyssey.common.copperfield.camelToSnakeCase
@@ -15,17 +15,18 @@ import java.lang.reflect.Field
 abstract class CopperConvertableConverter<TheirType : Any>(theirType: Class<TheirType>) : Converter<CopperConvertable, TheirType>(
     CopperConvertable::class.java, theirType) {
 
-    override fun toTheirs(value: CopperConvertable?, registry: Registry, ourType: Class<out CopperConvertable>, targetFormatType: Class<*>,
-                          field: Field?): TheirType? {
-        val instance = this.createTheirInstance(targetFormatType as Class<out TheirType>, value?.javaClass)
+    override fun toTheirs(
+        value: CopperConvertable?, agent: CopperfieldAgent, ourType: Class<out CopperConvertable>, targetFormat: Class<Any>,
+        field: Field?): TheirType? {
+        val instance = this.createTheirInstance(targetFormat as Class<out TheirType>, value?.javaClass)
 
         if (value != null) {
             this.getCopperFields(ourType).forEach {
                 val fieldValue = it.field.get(value)
                 val fieldType = fieldValue?.javaClass ?: it.field.type
                 val mappedType = if (it.typeMapper == null) fieldType else it.typeMapper.map(value, fieldType)
-                val converter = registry.findConverter(mappedType, it.converter, targetFormatType)
-                val convertedValue = if (converter == null) fieldValue else registry.toTheirsWithConverter(fieldValue, mappedType, converter, targetFormatType, it.field)
+                val converter = agent.findConverter(mappedType, it.converter, targetFormat)
+                val convertedValue = if (converter == null) fieldValue else agent.toTheirsWithConverter(fieldValue, mappedType, converter, targetFormat as Class<Any>, it.field)
 
                 val writeType = when {
                     converter == null -> convertedValue?.javaClass ?: mappedType
@@ -41,15 +42,16 @@ abstract class CopperConvertableConverter<TheirType : Any>(theirType: Class<Thei
         return this.finalizeTheirInstance(instance)
     }
 
-    override fun toOurs(value: TheirType?, registry: Registry, ourType: Class<out CopperConvertable>, targetFormatType: Class<*>,
-                        field: Field?): CopperConvertable? {
+    override fun toOurs(
+        value: TheirType?, agent: CopperfieldAgent, ourType: Class<out CopperConvertable>, targetFormat: Class<Any>,
+        field: Field?): CopperConvertable? {
         val instance = this.createOurInstance(ourType)
 
         if (value != null) {
             this.getCopperFields(ourType).forEach {
                 val fieldType = it.field.type
                 val mappedType = if (it.typeMapper == null) fieldType else it.typeMapper.map(instance, fieldType)
-                val converter = registry.findConverter(mappedType, it.converter, targetFormatType)
+                val converter = agent.findConverter(mappedType, it.converter, targetFormat)
 
                 val readType = when {
                     converter == null -> mappedType
@@ -62,7 +64,7 @@ abstract class CopperConvertableConverter<TheirType : Any>(theirType: Class<Thei
                 val convertedValue = (if (converter == null) {
                     fieldValue
                 } else {
-                    registry.toOursWithConverter(fieldValue, mappedType, converter, targetFormatType, it.field)
+                    agent.toOursWithConverter(fieldValue, mappedType, converter, targetFormat as Class<Any>, it.field)
                 }) ?: return@forEach
 
                 it.field.set(instance, convertedValue)

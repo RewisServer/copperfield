@@ -1,6 +1,6 @@
 package dev.volix.rewinside.odyssey.common.copperfield.converter
 
-import dev.volix.rewinside.odyssey.common.copperfield.Registry
+import dev.volix.rewinside.odyssey.common.copperfield.CopperfieldAgent
 import java.lang.reflect.Field
 
 /**
@@ -8,7 +8,7 @@ import java.lang.reflect.Field
  */
 class MapConverter : Converter<Map<*, *>, Map<*, *>>(Map::class.java, Map::class.java), KeyAware, ValueAware {
 
-    override fun toTheirs(value: Map<*, *>?, registry: Registry, ourType: Class<out Map<*, *>>, targetFormatType: Class<*>,
+    override fun toTheirs(value: Map<*, *>?, agent: CopperfieldAgent, ourType: Class<out Map<*, *>>, targetFormat: Class<Any>,
                           field: Field?): Map<*, *> {
         if (value == null) return mapOf<Any, Any>()
 
@@ -16,19 +16,19 @@ class MapConverter : Converter<Map<*, *>, Map<*, *>>(Map::class.java, Map::class
         val keyType = this.getKeyType(field)
 
         return value
-            .mapKeys { registry.toTheirs(it, keyType, targetFormatType, field) }
-            .mapValues { registry.toTheirs(it, valueType, targetFormatType, field) }
+            .mapKeys { agent.toTheirs(it, keyType, targetFormat, field) }
+            .mapValues { agent.toTheirs(it, valueType, targetFormat, field) }
     }
 
-    override fun toOurs(value: Map<*, *>?, registry: Registry, ourType: Class<out Map<*, *>>, targetFormatType: Class<*>, field: Field?): Map<*, *>? {
+    override fun toOurs(value: Map<*, *>?, agent: CopperfieldAgent, ourType: Class<out Map<*, *>>, targetFormat: Class<Any>, field: Field?): Map<*, *>? {
         if (value == null) return mapOf<Any, Any>()
 
         val valueType = this.getValueType(field)
         val keyType = this.getKeyType(field)
 
         return value
-            .mapKeys { registry.toOurs(it, keyType, targetFormatType, field) }
-            .mapValues { registry.toOurs(it, valueType, targetFormatType, field) }
+            .mapKeys { agent.toOurs(it, keyType, targetFormat, field) }
+            .mapValues { agent.toOurs(it, valueType, targetFormat, field) }
     }
 
 }

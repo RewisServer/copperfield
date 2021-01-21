@@ -11,7 +11,7 @@ import kotlin.reflect.KClass
  * If the [name] is an empty string, the java field name will be used and converted to snake case.
  * If a [converter] is set, it will override the default behavior for this type of field, which is defined by the registry used.
  *
- * @see dev.volix.rewinside.odyssey.common.copperfield.Registry
+ * @see dev.volix.rewinside.odyssey.common.copperfield.CopperfieldAgent
  *
  * @author Benedikt Wüller
  */

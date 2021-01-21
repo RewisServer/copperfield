@@ -12,15 +12,15 @@ import java.util.UUID
 /**
  * @author Benedikt Wüller
  */
-open class DefaultTemplate : Template() {
+open class BaseRegistry : Registry() {
 
     init {
-        this.with(Iterable::class.java, IterableConverter())
-        this.with(Map::class.java, MapConverter())
-        this.with(Number::class.java, NumberConverter())
-        this.with(UUID::class.java, UuidToStringConverter())
-        this.with(Enum::class.java, EnumToStringConverter())
-        this.with(OffsetDateTime::class.java, OffsetDateTimeToStringConverter())
+        this.with(Iterable::class.java, IterableConverter::class.java)
+        this.with(Map::class.java, MapConverter::class.java)
+        this.with(Number::class.java, NumberConverter::class.java)
+        this.with(UUID::class.java, UuidToStringConverter::class.java)
+        this.with(Enum::class.java, EnumToStringConverter::class.java)
+        this.with(OffsetDateTime::class.java, OffsetDateTimeToStringConverter::class.java)
     }
 
 }
