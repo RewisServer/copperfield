@@ -1,21 +1,22 @@
 package dev.volix.rewinside.odyssey.common.copperfield.bson.annotation
 
+import dev.volix.rewinside.odyssey.common.copperfield.TypeMapper
 import dev.volix.rewinside.odyssey.common.copperfield.converter.Converter
-import dev.volix.rewinside.odyssey.common.copperfield.converter.FallbackAutoConverter
 import kotlin.reflect.KClass
 
 /**
- * Essentially the same as [dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperField]
- * but for [dev.volix.rewinside.odyssey.common.copperfield.bson.BsonConvertable]s only.
+ * Flags this field to be included in the conversion process.
  *
- * Alternatively you can use it in addition to [dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperField]
- * to override the [name] or [converter] for [dev.volix.rewinside.odyssey.common.copperfield.bson.BsonConvertable]s.
+ * The [name] will be used as basis for the target name and may be modified to fit conventions based on the implementation.
+ * If the [name] is an empty string, the java field name will be used and converted to snake case.
+ * If a [converter] is set, it will override the default behavior for this type of field, which is defined by the registry used.
  *
- * @see dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperField
- * @see dev.volix.rewinside.odyssey.common.copperfield.bson.BsonRegistry
+ * @see dev.volix.rewinside.odyssey.common.copperfield.Registry
  *
  * @author Benedikt Wüller
  */
 @Target(AnnotationTarget.FIELD)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class CopperBsonField(val name: String = "", val converter: KClass<out Converter<*, *>> = FallbackAutoConverter::class)
+annotation class CopperBsonField(val name: String = "",
+                                 val converter: KClass<out Converter<out Any, out Any>> = Converter::class,
+                                 val typeMapper: KClass<TypeMapper<*, *>> = TypeMapper::class)

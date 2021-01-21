@@ -4,24 +4,22 @@ import dev.volix.rewinside.odyssey.common.copperfield.Registry
 import java.lang.reflect.Field
 
 /**
- * Makes sure the [Number]s are converted to the right type when converting `theirs` to `ours`.
- *
  * @author Benedikt Wüller
  */
-open class NumberConverter : Converter<Number, Number>(Number::class.java, Number::class.java) {
+class NumberConverter : Converter<Number, Number>(Number::class.java, Number::class.java) {
 
-    override fun toTheirs(value: Number?, field: Field?, registry: Registry<*, *>, type: Class<out Number>) = value
+    override fun toTheirs(value: Number?, registry: Registry, ourType: Class<out Number>, targetFormatType: Class<*>, field: Field?) = value
 
-    override fun toOurs(value: Number?, field: Field?, registry: Registry<*, *>, type: Class<out Number>): Number? {
+    override fun toOurs(value: Number?, registry: Registry, ourType: Class<out Number>, targetFormatType: Class<*>, field: Field?): Number? {
         if (value == null) return null
-        return when(type) {
-            Byte::class.java, Byte::class.javaObjectType -> value.toByte()
-            Short::class.java, Short::class.javaObjectType -> value.toShort()
-            Int::class.java, Int::class.javaObjectType -> value.toInt()
-            Long::class.java, Long::class.javaObjectType -> value.toLong()
-            Double::class.java, Double::class.javaObjectType -> value.toDouble()
-            Float::class.java, Float::class.javaObjectType -> value.toFloat()
-            else -> throw IllegalStateException("Unsupported number type: $type.")
+        return when(ourType) {
+            Byte::class.javaPrimitiveType, Byte::class.javaObjectType -> value.toByte()
+            Short::class.javaPrimitiveType, Short::class.javaObjectType -> value.toShort()
+            Int::class.javaPrimitiveType, Int::class.javaObjectType -> value.toInt()
+            Long::class.javaPrimitiveType, Long::class.javaObjectType -> value.toLong()
+            Double::class.javaPrimitiveType, Double::class.javaObjectType -> value.toDouble()
+            Float::class.javaPrimitiveType, Float::class.javaObjectType -> value.toFloat()
+            else -> throw IllegalStateException("Unsupported number type: $ourType.")
         }
     }
 

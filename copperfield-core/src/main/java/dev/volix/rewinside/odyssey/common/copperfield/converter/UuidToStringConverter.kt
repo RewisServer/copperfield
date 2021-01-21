@@ -5,18 +5,15 @@ import java.lang.reflect.Field
 import java.util.UUID
 
 /**
- * Converts [UUID]s to strings and vice versa.
- *
  * @author Benedikt Wüller
  */
-open class UuidToStringConverter : Converter<UUID, String>(UUID::class.java, String::class.java) {
+class UuidToStringConverter : Converter<UUID, String>(UUID::class.java, String::class.java) {
 
-    override fun toTheirs(value: UUID?, field: Field?, registry: Registry<*, *>, type: Class<out UUID>): String? {
-        if (value == null) return null
-        return value.toString()
+    override fun toTheirs(value: UUID?, registry: Registry, ourType: Class<out UUID>, targetFormatType: Class<*>, field: Field?): String? {
+        return value?.toString()
     }
 
-    override fun toOurs(value: String?, field: Field?, registry: Registry<*, *>, type: Class<out UUID>): UUID? {
+    override fun toOurs(value: String?, registry: Registry, ourType: Class<out UUID>, targetFormatType: Class<*>, field: Field?): UUID? {
         if (value == null) return null
         return UUID.fromString(value)
     }

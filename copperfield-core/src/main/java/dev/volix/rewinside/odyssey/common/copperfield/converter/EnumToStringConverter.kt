@@ -4,19 +4,17 @@ import dev.volix.rewinside.odyssey.common.copperfield.Registry
 import java.lang.reflect.Field
 
 /**
- * Converts [Enum]s to strings using the enum names and vice versa.
- *
  * @author Benedikt Wüller
  */
 class EnumToStringConverter : Converter<Enum<*>, String>(Enum::class.java, String::class.java) {
 
-    override fun toTheirs(value: Enum<*>?, field: Field?, registry: Registry<*, *>, type: Class<out Enum<*>>): String? {
+    override fun toTheirs(value: Enum<*>?, registry: Registry, ourType: Class<out Enum<*>>, targetFormatType: Class<*>, field: Field?): String? {
         return value?.name
     }
 
-    override fun toOurs(value: String?, field: Field?, registry: Registry<*, *>, type: Class<out Enum<*>>): Enum<*>? {
+    override fun toOurs(value: String?, registry: Registry, ourType: Class<out Enum<*>>, targetFormatType: Class<*>, field: Field?): Enum<*>? {
         if (value == null) return null
-        val method = type.getDeclaredMethod("valueOf", this.theirType)
+        val method = ourType.getDeclaredMethod("valueOf", String::class.java)
         return method.invoke(null, value) as Enum<*>
     }
 
