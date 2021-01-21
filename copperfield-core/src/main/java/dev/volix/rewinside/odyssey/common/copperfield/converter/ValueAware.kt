@@ -11,7 +11,6 @@ interface ValueAware {
     @JvmDefault
     fun getValueType(field: Field?): Class<*> {
         val annotation = field?.getDeclaredAnnotation(CopperValueType::class.java)
-        // TODO: use type mapper
         return annotation?.type?.java ?: Any::class.java
     }
 

@@ -7,25 +7,18 @@ import dev.volix.rewinside.odyssey.common.copperfield.converter.Converter
  */
 abstract class Registry {
 
-    companion object {
-        private val CONVERTERS = mutableMapOf<Class<out Converter<*, *>>, Converter<*, *>>()
-
-        fun getConverter(type: Class<out Converter<*, *>>): Converter<*, *> {
-            return CONVERTERS.getOrPut(type) { type.newInstance() }
-        }
-    }
-
     protected val defaultConverterTypes = mutableMapOf<Class<*>, Class<out Converter<*, *>>>()
     protected val converterTypes = mutableMapOf<Class<*>, MutableMap<Class<*>, Class<out Converter<*, *>>>>()
+    protected val converters = mutableMapOf<Class<out Converter<*, *>>, Converter<*, *>>()
 
     @JvmOverloads
     fun with(ourType: Class<*>, converterType: Class<out Converter<*, *>>, targetFormat: Class<*>? = null): Registry {
-        return this.with(ourType, Companion.getConverter(converterType), targetFormat)
+        return this.with(ourType, this.getConverterByType(converterType), targetFormat)
     }
 
     @JvmOverloads
     fun with(ourType: Class<*>, converter: Converter<out Any, out Any>, targetFormat: Class<*>? = null): Registry {
-        CONVERTERS[converter.javaClass] = converter
+        converters[converter.javaClass] = converter
         if (targetFormat == null) {
             this.defaultConverterTypes[ourType] = converter.javaClass
         } else {
@@ -37,6 +30,7 @@ abstract class Registry {
     fun with(other: Registry): Registry {
         this.defaultConverterTypes.putAll(other.defaultConverterTypes)
         other.converterTypes.forEach { (ourType, converterTypes) -> this.converterTypes.getOrPut(ourType) { mutableMapOf() }.putAll(converterTypes) }
+        this.converters.putAll(other.converters)
         return this
     }
 
@@ -78,9 +72,13 @@ abstract class Registry {
         return sorted.firstOrNull()?.value
     }
 
-    fun getConverter(ourType: Class<*>, targetFormat: Class<*>? = null): Converter<*, *>? {
+    fun getConverterByValueType(ourType: Class<*>, targetFormat: Class<*>? = null): Converter<*, *>? {
         val converterType = this.getConverterType(ourType, targetFormat) ?: return null
-        return Registry.getConverter(converterType)
+        return this.getConverterByType(converterType)
+    }
+
+    fun getConverterByType(type: Class<out Converter<*, *>>): Converter<*, *> {
+        return converters.getOrPut(type) { type.newInstance() }
     }
 
 }

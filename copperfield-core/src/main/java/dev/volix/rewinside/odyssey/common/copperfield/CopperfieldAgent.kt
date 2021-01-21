@@ -32,7 +32,7 @@ open class CopperfieldAgent(vararg registries: Registry) {
                                                                targetFormat: Class<*>, field: Field? = null): TheirType? {
         return this.toTheirsWithConverter(
             value, ourType,
-            Registry.getConverter(converterType as Class<Converter<*, *>>) as Converter<OurType, TheirType>,
+            this.registry.getConverterByType(converterType as Class<Converter<*, *>>) as Converter<OurType, TheirType>,
             targetFormat, field
         )
     }
@@ -55,7 +55,7 @@ open class CopperfieldAgent(vararg registries: Registry) {
     fun <OurType : Any, TheirType : Any> toOursWithConverter(value: TheirType?, ourType: Class<out OurType>, converterType: Class<out Converter<OurType, TheirType>>,
                                                              targetFormat: Class<*>, field: Field? = null): OurType? {
         return this.toOursWithConverter(
-            value, ourType, Registry.getConverter(converterType as Class<Converter<*, *>>) as Converter<OurType, TheirType>,
+            value, ourType, this.registry.getConverterByType(converterType as Class<Converter<*, *>>) as Converter<OurType, TheirType>,
             targetFormat, field
         )
     }
@@ -74,11 +74,11 @@ open class CopperfieldAgent(vararg registries: Registry) {
             return this.findConverter(type, targetFormat) as Converter<Any, Any>?
         }
 
-        return Registry.getConverter(converterType as Class<Converter<*, *>>) as Converter<Any, Any>
+        return this.registry.getConverterByType(converterType as Class<Converter<*, *>>) as Converter<Any, Any>
     }
 
     private fun <OurType : Any> findConverter(type: Class<OurType>, targetFormat: Class<*>): Converter<out OurType, *>? {
-        return this.registry.getConverter(type, targetFormat) as Converter<out OurType, *>?
+        return this.registry.getConverterByValueType(type, targetFormat) as Converter<out OurType, *>?
     }
 
 }

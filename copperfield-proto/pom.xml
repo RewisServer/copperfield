@@ -29,13 +29,6 @@
       <version>3.13.0</version>
       <scope>compile</scope>
     </dependency>
-
-    <!-- TODO: remove -->
-    <dependency>
-      <groupId>dev.volix.rewinside.odyssey.hagrid.protocol</groupId>
-      <artifactId>party</artifactId>
-      <version>[0.0,)</version>
-    </dependency>
   </dependencies>
 
 </project>

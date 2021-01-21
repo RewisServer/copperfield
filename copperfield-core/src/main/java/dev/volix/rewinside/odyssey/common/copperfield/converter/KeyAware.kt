@@ -11,7 +11,6 @@ interface KeyAware {
     @JvmDefault
     fun getKeyType(field: Field?): Class<*> {
         val annotation = field?.getDeclaredAnnotation(CopperKeyType::class.java)
-        // TODO: use type mapper
         return annotation?.type?.java ?: Any::class.java
     }
 
