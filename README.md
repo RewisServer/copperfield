@@ -33,30 +33,40 @@ default. All converters support conversion in both directions by default, howeve
 | Our Type | Their Type | Converter | Comment |
 | ---------- | ----------- | --------- | ------- |
 | `UUID` | `String` | `UuidToStringConverter` | Converts uuids to strings using `toString()`. |
-| `Enum` | `String` | `EnumToStringConverter` | Converts enums to their name corresponding strings. |
+| `Enum` | `String` | `EnumToStringConverter` | Converts enums to their corresponding names. |
 | `OffsetDateTime` | `String` | `OffsetDateTimeToStringConverter` | Converts datetime instances to ISO 8601 strings. |
 | `Number` | `Number` | `NumberConverter` | Makes sure that the number type does not get lost when converting `toOurs()`. |
-| `Iterable` | `Iterable` | `IterableConverter` | Converts all values using the matching converters defined for the `CopperfieldAgent`. This will only work when converting `toTheirs` by default. See _Converting Classes_ |
-| `Map` | `Map` | `MapConverter` | Converts all keys and values using the matching converters defined for the `CopperfieldAgent`. This will only work when converting `toTheirs` by default. See _Converting Classes_  |
+| `Iterable` | `Iterable` | `IterableConverter` | Converts all values using the matching converters defined for the `CopperfieldAgent`. This will only work when converting `toTheirs` by default. See _POJO Conversion_ |
+| `Map` | `Map` | `MapConverter` | Converts all keys and values using the matching converters defined for the `CopperfieldAgent`. This will only work when converting `toTheirs` by default. See _POJO Conversion_  |
 
 ### Converter Registries
 
-* TODO
-    * Registries
-    * Add converters
-    * Remove converters
-    * Combine registries
+* Registries
+* Add converters
+* Remove converters
+* Combine registries
+* Context groups
 
-### Converter Groups
-
-* TODO
-    * Context
-    
 ### POJO Conversion
 
-* TODO
-    * CopperConvertable
-    * CopperField / CopperFields / CopperIgnore
-    * Iterables / Maps
-    * Bson
-    * Proto
+* CopperConvertable
+* CopperField / CopperFields / CopperIgnore
+* Iterables / Maps
+
+#### Bson
+
+TODO
+
+#### Protobuf
+
+TODO
+
+## Advanced Usage
+
+### Custom Converters
+
+TODO
+
+### Type Mappers
+
+TODO
