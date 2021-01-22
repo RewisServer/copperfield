@@ -6,13 +6,10 @@ import dev.volix.rewinside.odyssey.common.copperfield.converter.Converter
 import kotlin.reflect.KClass
 
 /**
- * Flags this field to be included in the conversion process.
+ * Equals the functionality of [dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperField]s but can override one or multiple arguments
+ * of the [dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperField] for the bson context only.
  *
- * The [name] will be used as basis for the target name and may be modified to fit conventions based on the implementation.
- * If the [name] is an empty string, the java field name will be used and converted to snake case.
- * If a [converter] is set, it will override the default behavior for this type of field, which is defined by the registry used.
- *
- * @see dev.volix.rewinside.odyssey.common.copperfield.CopperfieldAgent
+ * @see dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperField
  *
  * @author Benedikt Wüller
  */

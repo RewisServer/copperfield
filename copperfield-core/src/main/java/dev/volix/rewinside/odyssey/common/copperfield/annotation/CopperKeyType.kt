@@ -3,6 +3,8 @@ package dev.volix.rewinside.odyssey.common.copperfield.annotation
 import kotlin.reflect.KClass
 
 /**
+ * Provides the generic key type for this field.
+ *
  * @author Benedikt Wüller
  */
 @Target(AnnotationTarget.FIELD)

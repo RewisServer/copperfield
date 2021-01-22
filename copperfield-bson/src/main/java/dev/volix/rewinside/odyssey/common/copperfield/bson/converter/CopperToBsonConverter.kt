@@ -9,6 +9,12 @@ import org.bson.Document
 import java.lang.reflect.Field
 
 /**
+ * Converts [CopperConvertable] instances to [Document] instances.
+ *
+ * The field names support the dot notation for nested values.
+ *
+ * @see CopperConvertableConverter
+ *
  * @author Benedikt Wüller
  */
 class CopperToBsonConverter : CopperConvertableConverter<Document>(Document::class.java) {

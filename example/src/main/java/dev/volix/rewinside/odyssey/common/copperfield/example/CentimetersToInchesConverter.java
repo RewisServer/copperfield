@@ -17,16 +17,14 @@ public class CentimetersToInchesConverter extends Converter<Double, Double> {
         super(Double.class, Double.class);
     }
 
-    @Nullable
-    @Override
-    public Double toTheirs(@Nullable final Double value, @NotNull final CopperfieldAgent agent, @NotNull final Class<? extends Double> ourType, @NotNull final Class<?> targetFormat, @Nullable final Field field) {
+    @Nullable @Override
+    public Double toTheirs(@Nullable final Double value, @NotNull final CopperfieldAgent agent, @NotNull final Class<? extends Double> ourType, @NotNull final Class<?> contextType, @Nullable final Field field) {
         if (value == null) return null;
         return value / CONVERSION_FACTOR;
     }
 
-    @Nullable
-    @Override
-    public Double toOurs(@Nullable final Double value, @NotNull final CopperfieldAgent agent, @NotNull final Class<? extends Double> ourType, @NotNull final Class<?> targetFormat, @Nullable final Field field) {
+    @Nullable @Override
+    public Double toOurs(@Nullable final Double value, @NotNull final CopperfieldAgent agent, @NotNull final Class<? extends Double> ourType, @NotNull final Class<?> contextType, @Nullable final Field field) {
         if (value == null) return null;
         return value * CONVERSION_FACTOR;
     }

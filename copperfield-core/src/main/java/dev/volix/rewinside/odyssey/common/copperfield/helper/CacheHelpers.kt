@@ -21,13 +21,6 @@ fun <K, V> Cache<K, V>.getOrPut(key: K, compute: (K) -> V): V {
 }
 
 /**
- * @see MutableMap.clear
- */
-fun <K, V> Cache<K, V>.clear() {
-    this.invalidateAll()
-}
-
-/**
  * @see MutableMap.set
  */
 operator fun <K, V> Cache<K, V>.set(key: K, value: V?) {

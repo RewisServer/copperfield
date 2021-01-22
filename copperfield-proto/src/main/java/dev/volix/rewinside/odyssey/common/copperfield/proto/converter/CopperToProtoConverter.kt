@@ -23,6 +23,10 @@ import java.lang.reflect.Method
 import java.util.concurrent.TimeUnit
 
 /**
+ * Converts [CopperConvertable] instances to [MessageLiteOrBuilder] instances.
+ *
+ * @see CopperConvertableConverter
+ *
  * @author Benedikt Wüller
  */
 class CopperToProtoConverter : CopperConvertableConverter<MessageLiteOrBuilder>(MessageLiteOrBuilder::class.java) {
@@ -170,9 +174,9 @@ class CopperToProtoConverter : CopperConvertableConverter<MessageLiteOrBuilder>(
         return super.getTypeMapper(type, field)
     }
 
-    override fun getTheirMappedType(type: Class<out CopperConvertable>, targetFormat: Class<out Any>): Class<out Any> {
+    override fun getMappedContextType(type: Class<out CopperConvertable>, contextType: Class<out Any>): Class<out Any> {
         val annotation = getAnnotation(type, CopperProtoClass::class.java)
-        return annotation?.type?.java ?: targetFormat
+        return annotation?.type?.java ?: contextType
     }
 
 }
