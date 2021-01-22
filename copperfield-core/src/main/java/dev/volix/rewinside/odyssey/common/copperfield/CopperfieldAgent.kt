@@ -1,8 +1,8 @@
 package dev.volix.rewinside.odyssey.common.copperfield
 
 import dev.volix.rewinside.odyssey.common.copperfield.converter.Converter
-import dev.volix.rewinside.odyssey.common.copperfield.template.BaseRegistry
-import dev.volix.rewinside.odyssey.common.copperfield.template.Registry
+import dev.volix.rewinside.odyssey.common.copperfield.registry.BaseRegistry
+import dev.volix.rewinside.odyssey.common.copperfield.registry.Registry
 import java.lang.reflect.Field
 
 /**

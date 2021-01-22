@@ -1,6 +1,7 @@
 package dev.volix.rewinside.odyssey.common.copperfield.converter
 
 import dev.volix.rewinside.odyssey.common.copperfield.CopperfieldAgent
+import dev.volix.rewinside.odyssey.common.copperfield.ValueAware
 import java.lang.reflect.Field
 
 /**

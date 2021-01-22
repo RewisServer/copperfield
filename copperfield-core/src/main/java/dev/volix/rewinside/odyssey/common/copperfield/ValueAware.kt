@@ -1,4 +1,4 @@
-package dev.volix.rewinside.odyssey.common.copperfield.converter
+package dev.volix.rewinside.odyssey.common.copperfield
 
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperValueType
 import java.lang.reflect.Field

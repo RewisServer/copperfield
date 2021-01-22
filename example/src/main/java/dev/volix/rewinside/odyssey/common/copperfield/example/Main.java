@@ -1,8 +1,8 @@
 package dev.volix.rewinside.odyssey.common.copperfield.example;
 
 import dev.volix.rewinside.odyssey.common.copperfield.CopperfieldAgent;
-import dev.volix.rewinside.odyssey.common.copperfield.bson.template.BsonRegistry;
-import dev.volix.rewinside.odyssey.common.copperfield.proto.template.ProtoRegistry;
+import dev.volix.rewinside.odyssey.common.copperfield.bson.registry.BsonRegistry;
+import dev.volix.rewinside.odyssey.common.copperfield.proto.registry.ProtoRegistry;
 import dev.volix.rewinside.odyssey.hagrid.protocol.party.PartyProtos;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;

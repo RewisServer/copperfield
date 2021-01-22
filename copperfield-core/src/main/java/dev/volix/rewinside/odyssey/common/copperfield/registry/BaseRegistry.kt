@@ -1,4 +1,4 @@
-package dev.volix.rewinside.odyssey.common.copperfield.template
+package dev.volix.rewinside.odyssey.common.copperfield.registry
 
 import dev.volix.rewinside.odyssey.common.copperfield.converter.EnumToStringConverter
 import dev.volix.rewinside.odyssey.common.copperfield.converter.IterableConverter

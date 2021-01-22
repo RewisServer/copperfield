@@ -1,10 +1,10 @@
-package dev.volix.rewinside.odyssey.common.copperfield.bson.template
+package dev.volix.rewinside.odyssey.common.copperfield.bson.registry
 
 import dev.volix.rewinside.odyssey.common.copperfield.CopperConvertable
 import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.BsonObjectIdToStringConverter
 import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.ByteArrayToBsonBinaryConverter
 import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.CopperToBsonConverter
-import dev.volix.rewinside.odyssey.common.copperfield.template.Registry
+import dev.volix.rewinside.odyssey.common.copperfield.registry.Registry
 import org.bson.Document
 import org.bson.types.ObjectId
 

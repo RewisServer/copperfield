@@ -1,11 +1,11 @@
-package dev.volix.rewinside.odyssey.common.copperfield.proto.template
+package dev.volix.rewinside.odyssey.common.copperfield.proto.registry
 
 import com.google.protobuf.MessageLiteOrBuilder
 import dev.volix.rewinside.odyssey.common.copperfield.CopperConvertable
 import dev.volix.rewinside.odyssey.common.copperfield.proto.converter.ByteArrayToProtoByteStringConverter
 import dev.volix.rewinside.odyssey.common.copperfield.proto.converter.CopperToProtoConverter
 import dev.volix.rewinside.odyssey.common.copperfield.proto.converter.MapToProtoStructConverter
-import dev.volix.rewinside.odyssey.common.copperfield.template.Registry
+import dev.volix.rewinside.odyssey.common.copperfield.registry.Registry
 
 /**
  * @author Benedikt Wüller
