@@ -1,7 +1,6 @@
 package dev.volix.rewinside.odyssey.common.copperfield.example;
 
 import dev.volix.rewinside.odyssey.common.copperfield.CopperConvertable;
-import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperField;
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperFields;
 import dev.volix.rewinside.odyssey.common.copperfield.proto.annotation.CopperProtoClass;
 import dev.volix.rewinside.odyssey.hagrid.protocol.party.PartyProtos;

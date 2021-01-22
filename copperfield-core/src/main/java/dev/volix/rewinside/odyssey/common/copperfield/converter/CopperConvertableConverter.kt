@@ -24,7 +24,7 @@ abstract class CopperConvertableConverter<TheirType : Any>(theirType: Class<Thei
 
         if (value != null) {
             value.onBeforeOursToTheirs()
-            this.getCopperFields(ourType, targetFormat, this.getTheirMappedType(ourType, targetFormat)).forEach {
+            this.getCopperFields(ourType, this.getTheirMappedType(ourType, targetFormat)).forEach {
                 val fieldValue = it.field.get(value)
                 val fieldType = fieldValue?.javaClass ?: it.field.type
                 val mappedType = if (it.typeMapper == null) fieldType else it.typeMapper.map(value, fieldType)
@@ -46,14 +46,13 @@ abstract class CopperConvertableConverter<TheirType : Any>(theirType: Class<Thei
         return this.finalizeTheirInstance(instance)
     }
 
-    override fun toOurs(
-        value: TheirType?, agent: CopperfieldAgent, ourType: Class<out CopperConvertable>, targetFormat: Class<Any>,
-        field: Field?): CopperConvertable? {
+    override fun toOurs(value: TheirType?, agent: CopperfieldAgent, ourType: Class<out CopperConvertable>, targetFormat: Class<Any>,
+                        field: Field?): CopperConvertable? {
         val instance = this.createOurInstance(ourType)
         instance.onBeforeTheirsToOurs()
 
         if (value != null) {
-            this.getCopperFields(ourType, targetFormat, this.getTheirMappedType(ourType, targetFormat)).forEach {
+            this.getCopperFields(ourType, this.getTheirMappedType(ourType, targetFormat)).forEach {
                 val fieldType = it.field.type
                 val mappedType = if (it.typeMapper == null) fieldType else it.typeMapper.map(instance, fieldType)
                 val converter = agent.findConverter(mappedType, it.converter, targetFormat)
@@ -81,16 +80,11 @@ abstract class CopperConvertableConverter<TheirType : Any>(theirType: Class<Thei
         return finalInstance
     }
 
-    private fun <T : Any> getCopperFields(type: Class<out T>, targetFormat: Class<Any>, theirType: Class<out Any>): List<CopperFieldDefinition> {
+    private fun <T : Any> getCopperFields(type: Class<out T>, theirType: Class<out Any>): List<CopperFieldDefinition> {
         return this.getDeclaredFields(type)
             .filterNot { field ->
                 val annotation = field.getAnnotation(CopperIgnore::class.java) ?: return@filterNot false
-                return@filterNot annotation.types.any {
-                    println("---")
-                    println(it.java)
-                    println(theirType)
-                    it.java.isAssignableFrom(theirType)
-                }
+                return@filterNot annotation.types.any { it.java.isAssignableFrom(theirType) }
             }
             .map {
                 it.isAccessible = true
