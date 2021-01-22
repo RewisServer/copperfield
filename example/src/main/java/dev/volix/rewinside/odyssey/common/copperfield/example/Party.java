@@ -22,7 +22,6 @@ public class Party implements CopperConvertable {
 
     public OffsetDateTime createdAt;
 
-    @CopperIgnore(contextTypes = {PartyProtos.Party.class })
     public OffsetDateTime disbandedAt;
 
     public UUID leaderUuid;

@@ -15,7 +15,9 @@ import dev.volix.rewinside.odyssey.common.copperfield.helper.getOrPut
 import dev.volix.rewinside.odyssey.common.copperfield.helper.snakeToPascalCase
 import dev.volix.rewinside.odyssey.common.copperfield.proto.annotation.CopperProtoClass
 import dev.volix.rewinside.odyssey.common.copperfield.proto.annotation.CopperProtoField
+import dev.volix.rewinside.odyssey.common.copperfield.proto.helper.convertFromStructValue
 import dev.volix.rewinside.odyssey.common.copperfield.proto.helper.convertFromValue
+import dev.volix.rewinside.odyssey.common.copperfield.proto.helper.convertToStructValue
 import dev.volix.rewinside.odyssey.common.copperfield.proto.helper.convertToValue
 import dev.volix.rewinside.odyssey.common.copperfield.proto.helper.getBaseValueType
 import java.lang.reflect.Field
@@ -70,10 +72,10 @@ class CopperToProtoConverter : CopperConvertableConverter<MessageLiteOrBuilder>(
         val getter = this.getGetterMethod(name, instance.javaClass, type)
 
         if (instance is StructOrBuilder) {
-            return convertFromValue(getter.invoke(instance, name, null) as Value?)
+            return convertFromStructValue(getter.invoke(instance, name, null) as Value?)
         } else {
             if (exists == null || exists.invoke(instance) == true) {
-                return getter.invoke(instance)
+                return convertFromValue(getter.invoke(instance))
             }
             return null
         }
@@ -84,11 +86,12 @@ class CopperToProtoConverter : CopperConvertableConverter<MessageLiteOrBuilder>(
         val method = this.getSetterMethod(name, instance.javaClass, correctedType)
 
         if (instance is StructOrBuilder) {
-            method.invoke(instance, name, convertToValue(value))
+            method.invoke(instance, name, convertToStructValue(value))
         } else {
             val valueType = getBaseValueType(type)
             if (valueType != null && method.parameters.first().type.isAssignableFrom(valueType)) {
-                method.invoke(instance, convertToValue(value))
+                val convertedValue = convertToValue(value) ?: return
+                method.invoke(instance, convertedValue)
             } else {
                 method.invoke(instance, value)
             }

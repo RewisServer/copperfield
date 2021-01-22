@@ -24,7 +24,7 @@ fun convertMapToStruct(map: Map<*, *>): Struct {
         map.mapKeys { (key, _) ->
             if (key !is String) throw IllegalStateException("Expected key of type string in map. Found ${key?.javaClass}.")
             return@mapKeys key
-        }.mapValues { convertToValue(it.value) }
+        }.mapValues { convertToStructValue(it.value) }
     ).build()
 }
 
@@ -33,27 +33,27 @@ fun convertMapToStruct(map: Map<*, *>): Struct {
  * Returns a new map.
  */
 fun convertStructToMap(struct: Struct): Map<String, Any?> {
-    return struct.fieldsMap.mapValues { (_, value) -> convertFromValue(value, true) }
+    return struct.fieldsMap.mapValues { (_, value) -> convertFromStructValue(value, true) }
 }
 
 /**
  * Recursively converts the [iterable] to a [ListValue].
  */
 fun convertIterableToListValue(iterable: Iterable<*>): ListValue? {
-    return ListValue.newBuilder().addAllValues(iterable.map(::convertToValue)).build()
+    return ListValue.newBuilder().addAllValues(iterable.map(::convertToStructValue)).build()
 }
 
 /**
  * Recursively converts the [value] to an iterable.
  */
 fun convertListValueToIterable(value: ListValue): Iterable<Any?> {
-    return value.valuesList.map(::convertFromValue)
+    return value.valuesList.map(::convertFromStructValue)
 }
 
 /**
  * Converts the [value] to a single [Value] or [Struct] (potentially recursively).
  */
-fun convertToValue(value: Any?): Value {
+fun convertToStructValue(value: Any?): Value {
     val builder = Value.newBuilder()
     when (value) {
         null -> builder.nullValue = NullValue.NULL_VALUE
@@ -72,7 +72,7 @@ fun convertToValue(value: Any?): Value {
 /**
  * Converts the [value] to an object of the corresponding type (potentially recursively).
  */
-fun convertFromValue(value: Value?, structToMap: Boolean = false): Any? {
+fun convertFromStructValue(value: Value?, structToMap: Boolean = false): Any? {
     if (value == null) return null
     return when (value.kindCase) {
         Value.KindCase.NULL_VALUE -> null
@@ -94,5 +94,31 @@ fun getBaseValueType(type: Class<*>): Class<*>? {
         Float::class.java.isAssignableFrom(type) -> FloatValue::class.java
         Boolean::class.java.isAssignableFrom(type) -> BoolValue::class.java
         else -> null
+    }
+}
+
+fun convertToValue(value: Any?): Any? {
+    return when (value) {
+        is String -> StringValue.of(value)
+        is Int -> Int32Value.of(value)
+        is Long -> Int64Value.of(value)
+        is Double -> DoubleValue.of(value)
+        is Float -> FloatValue.of(value)
+        is Boolean -> BoolValue.of(value)
+        else -> null
+    }
+}
+
+fun convertFromValue(value: Any?): Any? {
+    if (value == null) return null
+    return when (value) {
+        is StringValue -> value.value
+        is Int32Value -> value.value
+        is Int64Value -> value.value
+        is DoubleValue -> value.value
+        is FloatValue -> value.value
+        is BoolValue -> value.value
+        is NullValue -> null
+        else -> value
     }
 }
