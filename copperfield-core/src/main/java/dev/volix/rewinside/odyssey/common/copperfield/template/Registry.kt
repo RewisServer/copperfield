@@ -12,12 +12,12 @@ abstract class Registry {
     private val converters = mutableMapOf<Class<out Converter<*, *>>, Converter<*, *>>()
 
     @JvmOverloads
-    fun with(ourType: Class<*>, converterType: Class<out Converter<*, *>>, targetFormat: Class<*>? = null): Registry {
+    open fun with(ourType: Class<*>, converterType: Class<out Converter<*, *>>, targetFormat: Class<*>? = null): Registry {
         return this.with(ourType, this.getConverterByType(converterType), targetFormat)
     }
 
     @JvmOverloads
-    fun with(ourType: Class<*>, converter: Converter<out Any, out Any>, targetFormat: Class<*>? = null): Registry {
+    open fun with(ourType: Class<*>, converter: Converter<out Any, out Any>, targetFormat: Class<*>? = null): Registry {
         converters[converter.javaClass] = converter
         if (targetFormat == null) {
             this.defaultConverterTypes[ourType] = converter.javaClass
@@ -27,7 +27,7 @@ abstract class Registry {
         return this
     }
 
-    fun with(other: Registry): Registry {
+    open fun with(other: Registry): Registry {
         this.defaultConverterTypes.putAll(other.defaultConverterTypes)
         other.converterTypes.forEach { (ourType, converterTypes) -> this.converterTypes.getOrPut(ourType) { mutableMapOf() }.putAll(converterTypes) }
         this.converters.putAll(other.converters)
@@ -35,7 +35,7 @@ abstract class Registry {
     }
 
     @JvmOverloads
-    fun without(ourType: Class<*>, targetFormat: Class<*>? = null): Registry {
+    open fun without(ourType: Class<*>, targetFormat: Class<*>? = null): Registry {
         if (targetFormat == null) {
             this.defaultConverterTypes.remove(ourType)
         } else {
@@ -44,7 +44,7 @@ abstract class Registry {
         return this
     }
 
-    fun getConverterType(ourType: Class<*>, targetFormat: Class<*>? = null): Class<out Converter<*, *>>? {
+    protected open fun getConverterType(ourType: Class<*>, targetFormat: Class<*>? = null): Class<out Converter<out Any, out Any>>? {
         val converters = mutableMapOf<Class<*>, Class<out Converter<*, *>>>()
         converters.putAll(this.defaultConverterTypes)
 
@@ -72,13 +72,15 @@ abstract class Registry {
         return sorted.firstOrNull()?.value
     }
 
-    fun getConverterByValueType(ourType: Class<*>, targetFormat: Class<*>? = null): Converter<*, *>? {
+    @Suppress("UNCHECKED_CAST")
+    open fun <O : Any, T : Any> getConverterByValueType(ourType: Class<*>, targetFormat: Class<*>? = null): Converter<out O, out T>? {
         val converterType = this.getConverterType(ourType, targetFormat) ?: return null
-        return this.getConverterByType(converterType)
+        return this.getConverterByType(converterType as Class<out Converter<out O, out T>>)
     }
 
-    fun getConverterByType(type: Class<out Converter<*, *>>): Converter<*, *> {
-        return converters.getOrPut(type) { type.newInstance() }
+    @Suppress("UNCHECKED_CAST")
+    open fun <O : Any, T : Any> getConverterByType(type: Class<out Converter<out O, out T>>): Converter<out O, out T> {
+        return converters.getOrPut(type) { type.newInstance() } as Converter<out O, out T>
     }
 
 }

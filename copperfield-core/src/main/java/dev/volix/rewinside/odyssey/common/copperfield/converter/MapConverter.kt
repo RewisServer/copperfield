@@ -21,7 +21,7 @@ class MapConverter : Converter<Map<*, *>, Map<*, *>>(Map::class.java, Map::class
             .mapValues { agent.toTheirs(it, valueType, targetFormat, field) }
     }
 
-    override fun toOurs(value: Map<*, *>?, agent: CopperfieldAgent, ourType: Class<out Map<*, *>>, targetFormat: Class<out Any>, field: Field?): Map<*, *>? {
+    override fun toOurs(value: Map<*, *>?, agent: CopperfieldAgent, ourType: Class<out Map<*, *>>, targetFormat: Class<out Any>, field: Field?): Map<*, *> {
         if (value == null) return mapOf<Any, Any>()
 
         val valueType = this.getValueType(field)

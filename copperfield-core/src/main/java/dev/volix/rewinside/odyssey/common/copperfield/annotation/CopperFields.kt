@@ -5,4 +5,4 @@ package dev.volix.rewinside.odyssey.common.copperfield.annotation
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class CopperFields()
+annotation class CopperFields

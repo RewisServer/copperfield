@@ -8,4 +8,4 @@ import java.lang.reflect.Field
  */
 data class CopperFieldDefinition(val field: Field, val name: String,
                                  val converter: Class<out Converter<out Any, out Any>>,
-                                 val typeMapper: CopperTypeMapper<CopperConvertable, CopperConvertable>?)
+                                 val typeMapper: CopperTypeMapper<out CopperConvertable, out CopperConvertable>?)

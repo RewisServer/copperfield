@@ -26,7 +26,11 @@ abstract class CopperConvertableConverter<T : Any>(theirType: Class<T>) : Conver
             this.getCopperFields(ourType, this.getTheirMappedType(ourType, targetFormat)).forEach {
                 val fieldValue = it.field.get(value)
                 val fieldType = fieldValue?.javaClass ?: it.field.type
-                val mappedType = if (it.typeMapper == null) fieldType else it.typeMapper.mapType(value, fieldType)
+
+                @Suppress("UNCHECKED_CAST")
+                val typeMapper = it.typeMapper as CopperTypeMapper<CopperConvertable, CopperConvertable>?
+
+                val mappedType = typeMapper?.mapType(value, fieldType) ?: fieldType
                 val converter = agent.findConverter(mappedType, it.converter, targetFormat)
                 val convertedValue = if (converter == null) fieldValue else agent.toTheirsWithConverter(fieldValue, mappedType, converter, targetFormat, it.field)
 
@@ -54,7 +58,11 @@ abstract class CopperConvertableConverter<T : Any>(theirType: Class<T>) : Conver
         if (value != null) {
             this.getCopperFields(ourType, this.getTheirMappedType(ourType, targetFormat)).forEach {
                 val fieldType = it.field.type
-                val mappedType = if (it.typeMapper == null) fieldType else it.typeMapper.mapType(instance, fieldType)
+
+                @Suppress("UNCHECKED_CAST")
+                val typeMapper = it.typeMapper as CopperTypeMapper<CopperConvertable, CopperConvertable>?
+
+                val mappedType = typeMapper?.mapType(instance, fieldType) ?: fieldType
                 val converter = agent.findConverter(mappedType, it.converter, targetFormat)
 
                 val readType = when {
@@ -96,7 +104,7 @@ abstract class CopperConvertableConverter<T : Any>(theirType: Class<T>) : Conver
                 val typeMapperType = this.getTypeMapper(annotation?.typeMapper?.java ?: CopperTypeMapper::class.java, it)
                 val typeMapper = if (typeMapperType == CopperTypeMapper::class.java) null else typeMapperType.newInstance()
 
-                return@map CopperFieldDefinition(it, this.getName(name, it), converterType, typeMapper as CopperTypeMapper<CopperConvertable, CopperConvertable>?)
+                return@map CopperFieldDefinition(it, this.getName(name, it), converterType, typeMapper)
             }
             .sortedWith(Comparator { o1, o2 ->
                 // First handle all fields with no requirements.
