@@ -15,12 +15,12 @@ class BsonRegistry : Registry() {
 
     companion object {
         @JvmField
-        val TARGET_BSON = Document::class.java
+        val BSON = Document::class.java
     }
 
     init {
-        this.with(ByteArray::class.java, ByteArrayToBsonBinaryConverter::class.java, TARGET_BSON)
-        this.with(CopperConvertable::class.java, CopperToBsonConverter::class.java, TARGET_BSON)
+        this.with(ByteArray::class.java, ByteArrayToBsonBinaryConverter::class.java, BSON)
+        this.with(CopperConvertable::class.java, CopperToBsonConverter::class.java, BSON)
 
         // Support for cross conversions.
         this.with(ObjectId::class.java, BsonObjectIdToStringConverter::class.java, Any::class.java)

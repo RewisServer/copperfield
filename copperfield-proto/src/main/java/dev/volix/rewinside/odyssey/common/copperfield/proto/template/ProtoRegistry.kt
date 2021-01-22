@@ -14,13 +14,13 @@ class ProtoRegistry : Registry() {
 
     companion object {
         @JvmField
-        val TARGET_PROTO = MessageLiteOrBuilder::class.java
+        val PROTO = MessageLiteOrBuilder::class.java
     }
 
     init {
-        this.with(CopperConvertable::class.java, CopperToProtoConverter::class.java, TARGET_PROTO)
-        this.with(ByteArray::class.java, ByteArrayToProtoByteStringConverter::class.java, TARGET_PROTO)
-        this.with(Map::class.java, MapToProtoStructConverter::class.java, TARGET_PROTO)
+        this.with(CopperConvertable::class.java, CopperToProtoConverter::class.java, PROTO)
+        this.with(ByteArray::class.java, ByteArrayToProtoByteStringConverter::class.java, PROTO)
+        this.with(Map::class.java, MapToProtoStructConverter::class.java, PROTO)
     }
 
 }

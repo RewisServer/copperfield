@@ -19,11 +19,11 @@ public class Main {
 
         final CopperfieldAgent agent = new CopperfieldAgent(new BsonRegistry(), new ProtoRegistry());
 
-        final Document document = agent.toTheirs(party, BsonRegistry.TARGET_BSON);
-        final Party bsonCopy = agent.toOurs(document, Party.class, BsonRegistry.TARGET_BSON);
+        final Document document = agent.toTheirs(party, BsonRegistry.BSON);
+        final Party bsonCopy = agent.toOurs(document, Party.class, BsonRegistry.BSON);
 
-        final PartyProtos.Party proto = (PartyProtos.Party) agent.toTheirs(party, ProtoRegistry.TARGET_PROTO);
-        final Party protoCopy = agent.toOurs(proto, Party.class, ProtoRegistry.TARGET_PROTO);
+        final PartyProtos.Party proto = (PartyProtos.Party) agent.toTheirs(party, ProtoRegistry.PROTO);
+        final Party protoCopy = agent.toOurs(proto, Party.class, ProtoRegistry.PROTO);
 
         final String foo = "bar";
     }

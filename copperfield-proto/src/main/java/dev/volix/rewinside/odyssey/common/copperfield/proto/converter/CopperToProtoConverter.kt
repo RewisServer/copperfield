@@ -170,4 +170,9 @@ class CopperToProtoConverter : CopperConvertableConverter<MessageLiteOrBuilder>(
         return super.getTypeMapper(type, field)
     }
 
+    override fun getTheirMappedType(type: Class<out CopperConvertable>, targetFormat: Class<out Any>): Class<out Any> {
+        val annotation = getAnnotation(type, CopperProtoClass::class.java)
+        return annotation?.type?.java ?: targetFormat
+    }
+
 }

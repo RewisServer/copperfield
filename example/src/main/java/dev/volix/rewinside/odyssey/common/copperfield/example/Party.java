@@ -1,6 +1,5 @@
 package dev.volix.rewinside.odyssey.common.copperfield.example;
 
-import com.google.protobuf.MessageLiteOrBuilder;
 import dev.volix.rewinside.odyssey.common.copperfield.CopperConvertable;
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperFields;
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperIgnore;
@@ -23,7 +22,7 @@ public class Party implements CopperConvertable {
 
     public OffsetDateTime createdAt;
 
-    @CopperIgnore(types = { MessageLiteOrBuilder.class })
+    @CopperIgnore(types = { PartyProtos.Party.class })
     public OffsetDateTime disbandedAt;
 
     public UUID leaderUuid;
@@ -38,5 +37,13 @@ public class Party implements CopperConvertable {
 
     @CopperValueType(type = TimedPartyEvent.class)
     public List<TimedPartyEvent> events = new ArrayList<>();
+
+    @CopperIgnore
+    public boolean deserialized = false;
+
+    @Override
+    public void onAfterTheirsToOurs() {
+        this.deserialized = true;
+    }
 
 }
