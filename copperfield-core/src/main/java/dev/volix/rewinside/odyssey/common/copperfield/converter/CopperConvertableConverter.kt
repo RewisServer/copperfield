@@ -22,6 +22,7 @@ abstract class CopperConvertableConverter<TheirType : Any>(theirType: Class<Thei
         val instance = this.createTheirInstance(targetFormat as Class<out TheirType>, value?.javaClass)
 
         if (value != null) {
+            value.onBeforeOursToTheirs()
             this.getCopperFields(ourType, targetFormat).forEach {
                 val fieldValue = it.field.get(value)
                 val fieldType = fieldValue?.javaClass ?: it.field.type
@@ -38,6 +39,7 @@ abstract class CopperConvertableConverter<TheirType : Any>(theirType: Class<Thei
 
                 this.setValue(instance, it.name, convertedValue, this.getNonPrimitiveType(writeType))
             }
+            value.onAfterOursToTheirs()
         }
 
         return this.finalizeTheirInstance(instance)
@@ -47,6 +49,7 @@ abstract class CopperConvertableConverter<TheirType : Any>(theirType: Class<Thei
         value: TheirType?, agent: CopperfieldAgent, ourType: Class<out CopperConvertable>, targetFormat: Class<Any>,
         field: Field?): CopperConvertable? {
         val instance = this.createOurInstance(ourType)
+        instance.onBeforeTheirsToOurs()
 
         if (value != null) {
             this.getCopperFields(ourType, targetFormat).forEach {
@@ -72,7 +75,9 @@ abstract class CopperConvertableConverter<TheirType : Any>(theirType: Class<Thei
             }
         }
 
-        return this.finalizeOurInstance(instance)
+        val finalInstance = this.finalizeOurInstance(instance)
+        finalInstance.onAfterTheirsToOurs()
+        return finalInstance
     }
 
     private fun <T : Any> getCopperFields(type: Class<out T>, targetFormat: Class<Any>): List<CopperFieldDefinition> {
