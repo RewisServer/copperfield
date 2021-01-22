@@ -1,10 +1,13 @@
 package dev.volix.rewinside.odyssey.common.copperfield.example;
 
+import com.google.protobuf.MessageLiteOrBuilder;
 import com.sun.xml.internal.ws.wsdl.writer.document.Part;
 import dev.volix.rewinside.odyssey.common.copperfield.CopperConvertable;
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperField;
+import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperIgnore;
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperValueType;
 import dev.volix.rewinside.odyssey.common.copperfield.proto.annotation.CopperProtoClass;
+import dev.volix.rewinside.odyssey.common.copperfield.proto.template.ProtoRegistry;
 import dev.volix.rewinside.odyssey.hagrid.protocol.party.PartyProtos;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -24,6 +27,7 @@ public class Party implements CopperConvertable {
     public OffsetDateTime createdAt;
 
     @CopperField
+    @CopperIgnore(types = { MessageLiteOrBuilder.class })
     public OffsetDateTime disbandedAt;
 
     @CopperField

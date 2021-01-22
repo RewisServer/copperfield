@@ -5,6 +5,7 @@ import dev.volix.rewinside.odyssey.common.copperfield.CopperFieldDefinition
 import dev.volix.rewinside.odyssey.common.copperfield.CopperfieldAgent
 import dev.volix.rewinside.odyssey.common.copperfield.TypeMapper
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperField
+import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperIgnore
 import dev.volix.rewinside.odyssey.common.copperfield.camelToSnakeCase
 import dev.volix.rewinside.odyssey.common.copperfield.getAllFields
 import java.lang.reflect.Field
@@ -21,7 +22,7 @@ abstract class CopperConvertableConverter<TheirType : Any>(theirType: Class<Thei
         val instance = this.createTheirInstance(targetFormat as Class<out TheirType>, value?.javaClass)
 
         if (value != null) {
-            this.getCopperFields(ourType).forEach {
+            this.getCopperFields(ourType, targetFormat).forEach {
                 val fieldValue = it.field.get(value)
                 val fieldType = fieldValue?.javaClass ?: it.field.type
                 val mappedType = if (it.typeMapper == null) fieldType else it.typeMapper.map(value, fieldType)
@@ -48,7 +49,7 @@ abstract class CopperConvertableConverter<TheirType : Any>(theirType: Class<Thei
         val instance = this.createOurInstance(ourType)
 
         if (value != null) {
-            this.getCopperFields(ourType).forEach {
+            this.getCopperFields(ourType, targetFormat).forEach {
                 val fieldType = it.field.type
                 val mappedType = if (it.typeMapper == null) fieldType else it.typeMapper.map(instance, fieldType)
                 val converter = agent.findConverter(mappedType, it.converter, targetFormat)
@@ -74,13 +75,15 @@ abstract class CopperConvertableConverter<TheirType : Any>(theirType: Class<Thei
         return this.finalizeOurInstance(instance)
     }
 
-    private fun <T : Any> getCopperFields(type: Class<out T>): List<CopperFieldDefinition> {
+    private fun <T : Any> getCopperFields(type: Class<out T>, targetFormat: Class<Any>): List<CopperFieldDefinition> {
         return getAllFields(type)
             .filter { it.isAnnotationPresent(CopperField::class.java) }
+            .filterNot { field ->
+                val annotation = field.getAnnotation(CopperIgnore::class.java) ?: return@filterNot false
+                return@filterNot annotation.types.any { it.java.isAssignableFrom(targetFormat) }
+            }
             .map {
                 it.isAccessible = true
-
-                // TODO: check if field is ignored in target format
 
                 val annotation = it.getDeclaredAnnotation(CopperField::class.java)
                 val name = if (annotation.name.isEmpty()) it.name.camelToSnakeCase() else annotation.name

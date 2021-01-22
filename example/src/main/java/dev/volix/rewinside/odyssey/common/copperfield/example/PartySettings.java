@@ -11,7 +11,7 @@ import dev.volix.rewinside.odyssey.common.copperfield.proto.annotation.CopperPro
 @CopperProtoClass(type = Struct.class)
 public class PartySettings implements CopperConvertable {
 
-    @CopperField
+    @CopperField(name = "cock_length_in_inches", converter = CentimetersToInchesConverter.class)
     public double cockLengthInCentimeters;
 
 }
