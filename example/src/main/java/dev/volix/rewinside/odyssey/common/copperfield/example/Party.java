@@ -1,13 +1,11 @@
 package dev.volix.rewinside.odyssey.common.copperfield.example;
 
 import com.google.protobuf.MessageLiteOrBuilder;
-import com.sun.xml.internal.ws.wsdl.writer.document.Part;
 import dev.volix.rewinside.odyssey.common.copperfield.CopperConvertable;
-import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperField;
+import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperFields;
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperIgnore;
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperValueType;
 import dev.volix.rewinside.odyssey.common.copperfield.proto.annotation.CopperProtoClass;
-import dev.volix.rewinside.odyssey.common.copperfield.proto.template.ProtoRegistry;
 import dev.volix.rewinside.odyssey.hagrid.protocol.party.PartyProtos;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -17,34 +15,27 @@ import java.util.UUID;
 /**
  * @author Benedikt Wüller
  */
+@CopperFields
 @CopperProtoClass(type = PartyProtos.Party.class)
 public class Party implements CopperConvertable {
 
-    @CopperField
     public UUID id;
 
-    @CopperField
     public OffsetDateTime createdAt;
 
-    @CopperField
     @CopperIgnore(types = { MessageLiteOrBuilder.class })
     public OffsetDateTime disbandedAt;
 
-    @CopperField
     public UUID leaderUuid;
 
-    @CopperField
     @CopperValueType(type = PartyMember.class)
     public List<PartyMember> members = new ArrayList<>();
 
-    @CopperField
     public PartySettings settings = new PartySettings();
 
-    @CopperField
     @CopperValueType(type = UUID.class)
     public List<UUID> bannedUuids = new ArrayList<>();
 
-    @CopperField
     @CopperValueType(type = TimedPartyEvent.class)
     public List<TimedPartyEvent> events = new ArrayList<>();
 

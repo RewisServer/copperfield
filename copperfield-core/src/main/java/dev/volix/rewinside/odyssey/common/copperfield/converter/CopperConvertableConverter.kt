@@ -5,9 +5,10 @@ import dev.volix.rewinside.odyssey.common.copperfield.CopperFieldDefinition
 import dev.volix.rewinside.odyssey.common.copperfield.CopperfieldAgent
 import dev.volix.rewinside.odyssey.common.copperfield.TypeMapper
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperField
+import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperFields
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperIgnore
 import dev.volix.rewinside.odyssey.common.copperfield.camelToSnakeCase
-import dev.volix.rewinside.odyssey.common.copperfield.getAllFields
+import dev.volix.rewinside.odyssey.common.copperfield.getAnnotation
 import java.lang.reflect.Field
 
 /**
@@ -81,8 +82,7 @@ abstract class CopperConvertableConverter<TheirType : Any>(theirType: Class<Thei
     }
 
     private fun <T : Any> getCopperFields(type: Class<out T>, targetFormat: Class<Any>): List<CopperFieldDefinition> {
-        return getAllFields(type)
-            .filter { it.isAnnotationPresent(CopperField::class.java) }
+        return this.getDeclaredFields(type)
             .filterNot { field ->
                 val annotation = field.getAnnotation(CopperIgnore::class.java) ?: return@filterNot false
                 return@filterNot annotation.types.any { it.java.isAssignableFrom(targetFormat) }
@@ -91,10 +91,10 @@ abstract class CopperConvertableConverter<TheirType : Any>(theirType: Class<Thei
                 it.isAccessible = true
 
                 val annotation = it.getDeclaredAnnotation(CopperField::class.java)
-                val name = if (annotation.name.isEmpty()) it.name.camelToSnakeCase() else annotation.name
-                val converterType = this.getConverterType(annotation.converter.java as Class<Converter<Any, Any>>, it)
+                val name = if (annotation?.name?.isEmpty() != false) it.name.camelToSnakeCase() else annotation.name
+                val converterType = this.getConverterType((annotation?.converter?.java ?: Converter::class.java) as Class<Converter<Any, Any>>, it)
 
-                val typeMapperType = this.getTypeMapper(annotation.typeMapper.java as Class<TypeMapper<out CopperConvertable, CopperConvertable>>, it)
+                val typeMapperType = this.getTypeMapper((annotation?.typeMapper?.java ?: TypeMapper::class.java) as Class<TypeMapper<out CopperConvertable, CopperConvertable>>, it)
                 val typeMapper = if (typeMapperType == TypeMapper::class.java) null else typeMapperType.newInstance()
 
                 return@map CopperFieldDefinition(it, this.getName(name, it), converterType, typeMapper as TypeMapper<CopperConvertable, CopperConvertable>?)
@@ -118,6 +118,21 @@ abstract class CopperConvertableConverter<TheirType : Any>(theirType: Class<Thei
 
                 return@Comparator 0
             })
+    }
+
+    private fun getDeclaredFields(type: Class<*>): Collection<Field> {
+        val fields = mutableListOf<Field>()
+        var currentType: Class<*>? = type
+        do {
+            val declaresAllFields = getAnnotation(currentType!!, CopperFields::class.java) != null
+
+            currentType.declaredFields
+                .filter { declaresAllFields || it.isAnnotationPresent(CopperField::class.java) }
+                .forEach { fields.add(it) }
+
+            currentType = currentType.superclass
+        } while (currentType != null)
+        return fields
     }
 
     private fun getNonPrimitiveType(type: Class<*>): Class<*> {
