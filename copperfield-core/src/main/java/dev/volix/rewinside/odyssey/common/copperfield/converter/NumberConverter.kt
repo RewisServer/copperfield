@@ -8,9 +8,9 @@ import java.lang.reflect.Field
  */
 class NumberConverter : Converter<Number, Number>(Number::class.java, Number::class.java) {
 
-    override fun toTheirs(value: Number?, agent: CopperfieldAgent, ourType: Class<out Number>, targetFormat: Class<Any>, field: Field?) = value
+    override fun toTheirs(value: Number?, agent: CopperfieldAgent, ourType: Class<out Number>, targetFormat: Class<out Any>, field: Field?) = value
 
-    override fun toOurs(value: Number?, agent: CopperfieldAgent, ourType: Class<out Number>, targetFormat: Class<Any>, field: Field?): Number? {
+    override fun toOurs(value: Number?, agent: CopperfieldAgent, ourType: Class<out Number>, targetFormat: Class<out Any>, field: Field?): Number? {
         if (value == null) return null
         return when(ourType) {
             Byte::class.javaPrimitiveType, Byte::class.javaObjectType -> value.toByte()

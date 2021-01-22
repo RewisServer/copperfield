@@ -1,4 +1,4 @@
-package dev.volix.rewinside.odyssey.common.copperfield
+package dev.volix.rewinside.odyssey.common.copperfield.helper
 
 /**
  * Just some helpers to modify the case-ing of strings.

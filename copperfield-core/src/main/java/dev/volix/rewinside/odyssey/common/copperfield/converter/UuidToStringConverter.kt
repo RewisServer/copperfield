@@ -9,11 +9,11 @@ import java.util.UUID
  */
 class UuidToStringConverter : Converter<UUID, String>(UUID::class.java, String::class.java) {
 
-    override fun toTheirs(value: UUID?, agent: CopperfieldAgent, ourType: Class<out UUID>, targetFormat: Class<Any>, field: Field?): String? {
+    override fun toTheirs(value: UUID?, agent: CopperfieldAgent, ourType: Class<out UUID>, targetFormat: Class<out Any>, field: Field?): String? {
         return value?.toString()
     }
 
-    override fun toOurs(value: String?, agent: CopperfieldAgent, ourType: Class<out UUID>, targetFormat: Class<Any>, field: Field?): UUID? {
+    override fun toOurs(value: String?, agent: CopperfieldAgent, ourType: Class<out UUID>, targetFormat: Class<out Any>, field: Field?): UUID? {
         if (value == null) return null
         return UUID.fromString(value)
     }

@@ -12,13 +12,13 @@ class OffsetDateTimeToStringConverter(private val formatter: DateTimeFormatter =
     : Converter<OffsetDateTime, String>(OffsetDateTime::class.java, String::class.java) {
 
     override fun toTheirs(
-        value: OffsetDateTime?, agent: CopperfieldAgent, ourType: Class<out OffsetDateTime>, targetFormat: Class<Any>,
+        value: OffsetDateTime?, agent: CopperfieldAgent, ourType: Class<out OffsetDateTime>, targetFormat: Class<out Any>,
         field: Field?): String? {
         return value?.format(this.formatter)
     }
 
     override fun toOurs(
-        value: String?, agent: CopperfieldAgent, ourType: Class<out OffsetDateTime>, targetFormat: Class<Any>,
+        value: String?, agent: CopperfieldAgent, ourType: Class<out OffsetDateTime>, targetFormat: Class<out Any>,
         field: Field?): OffsetDateTime? {
         return if (value == null) null else OffsetDateTime.parse(value, this.formatter)
     }

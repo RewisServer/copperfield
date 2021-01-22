@@ -1,6 +1,7 @@
 package dev.volix.rewinside.odyssey.common.copperfield.annotation
 
-import dev.volix.rewinside.odyssey.common.copperfield.TypeMapper
+import dev.volix.rewinside.odyssey.common.copperfield.CopperConvertable
+import dev.volix.rewinside.odyssey.common.copperfield.CopperTypeMapper
 import dev.volix.rewinside.odyssey.common.copperfield.converter.Converter
 import kotlin.reflect.KClass
 
@@ -19,4 +20,4 @@ import kotlin.reflect.KClass
 @Retention(AnnotationRetention.RUNTIME)
 annotation class CopperField(val name: String = "",
                              val converter: KClass<out Converter<out Any, out Any>> = Converter::class,
-                             val typeMapper: KClass<out TypeMapper<*, *>> = TypeMapper::class)
+                             val typeMapper: KClass<out CopperTypeMapper<out CopperConvertable, out CopperConvertable>> = CopperTypeMapper::class)

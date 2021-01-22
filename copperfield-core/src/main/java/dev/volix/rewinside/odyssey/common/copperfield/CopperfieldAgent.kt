@@ -17,68 +17,62 @@ open class CopperfieldAgent(vararg registries: Registry) {
     }
 
     @JvmOverloads
-    fun <OurType : Any, TheirType : Any> toTheirs(value: OurType, targetFormat: Class<TheirType>, field: Field? = null): TheirType? {
+    fun <O : Any, T : Any> toTheirs(value: O, targetFormat: Class<out T>, field: Field? = null): T? {
         return this.toTheirs(value, value.javaClass, targetFormat, field)
     }
 
     @JvmOverloads
-    fun <OurType : Any, TheirType : Any> toTheirs(value: OurType?, ourType: Class<out OurType>, targetFormat: Class<TheirType>, field: Field? = null): TheirType? {
-        val converter = this.findConverter(ourType, targetFormat) ?: return value as TheirType?
-        return this.toTheirsWithConverter(value, ourType, converter as Converter<OurType, TheirType>, targetFormat, field)
+    fun <O : Any, T : Any> toTheirs(value: O?, ourType: Class<out O>, targetFormat: Class<out T>, field: Field? = null): T? {
+        val converter = this.findConverter<O, T>(ourType, targetFormat) ?: return value as T?
+        return this.toTheirsWithConverter(value, ourType, converter, targetFormat, field)
     }
 
     @JvmOverloads
-    fun <OurType : Any, TheirType : Any> toTheirsWithConverter(value: OurType?, ourType: Class<out OurType>, converterType: Class<out Converter<OurType, TheirType>>,
-                                                               targetFormat: Class<*>, field: Field? = null): TheirType? {
+    fun <O : Any, T : Any> toTheirsWithConverter(value: O?, ourType: Class<out O>, converterType: Class<out Converter<out O, out T>>, targetFormat: Class<out Any>, field: Field? = null): T? {
         return this.toTheirsWithConverter(
             value, ourType,
-            this.registry.getConverterByType(converterType as Class<Converter<*, *>>) as Converter<OurType, TheirType>,
+            this.registry.getConverterByType(converterType) as Converter<O, T>,
             targetFormat, field
         )
     }
 
     @JvmOverloads
-    fun <OurType : Any, TheirType : Any> toTheirsWithConverter(value: OurType?, ourType: Class<out OurType>, converter: Converter<OurType, TheirType>,
-                                                               targetFormat: Class<*>, field: Field? = null): TheirType? {
-        return converter.toTheirs(value, this, ourType, targetFormat as Class<Any>, field)
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @JvmOverloads
-    fun <OurType : Any, TheirType : Any> toOurs(value: TheirType?, ourType: Class<out OurType>, targetFormat: Class<TheirType>, field: Field? = null): OurType? {
-        val converter = this.findConverter(ourType, targetFormat) ?: return value as OurType?
-        return this.toOursWithConverter(value, ourType, converter as Converter<OurType, TheirType>, targetFormat, field)
+    fun <O : Any, T : Any> toTheirsWithConverter(value: O?, ourType: Class<out O>, converter: Converter<out O, out T>, targetFormat: Class<out Any>, field: Field? = null): T? {
+        return (converter as Converter<O, T>).toTheirs(value, this, ourType, targetFormat, field)
     }
 
     @JvmOverloads
-    fun <OurType : Any, TheirType : Any> toOursWithConverter(value: TheirType?, ourType: Class<out OurType>, converterType: Class<out Converter<OurType, TheirType>>,
-                                                             targetFormat: Class<*>, field: Field? = null): OurType? {
+    fun <O : Any, T : Any> toOurs(value: T?, ourType: Class<out O>, targetFormat: Class<out T>, field: Field? = null): O? {
+        val converter = this.findConverter<O, T>(ourType, targetFormat) ?: return value as O?
+        return this.toOursWithConverter(value, ourType, converter, targetFormat, field)
+    }
+
+    @JvmOverloads
+    fun <O : Any, T : Any> toOursWithConverter(value: T?, ourType: Class<out O>, converterType: Class<out Converter<out O, out T>>, targetFormat: Class<out Any>, field: Field? = null): O? {
         return this.toOursWithConverter(
-            value, ourType, this.registry.getConverterByType(converterType as Class<Converter<*, *>>) as Converter<OurType, TheirType>,
+            value, ourType, this.registry.getConverterByType(converterType) as Converter<O, T>,
             targetFormat, field
         )
     }
 
     @JvmOverloads
-    fun <OurType : Any, TheirType : Any> toOursWithConverter(value: TheirType?, ourType: Class<out OurType>, converter: Converter<OurType, TheirType>,
-                                                             targetFormat: Class<*>, field: Field? = null): OurType? {
-        return converter.toOurs(value, this, ourType, targetFormat as Class<Any>, field)
+    fun <O : Any, T : Any> toOursWithConverter(value: T?, ourType: Class<out O>, converter: Converter<out O, out T>, targetFormat: Class<out Any>, field: Field? = null): O? {
+        return (converter as Converter<O, T>).toOurs(value, this, ourType, targetFormat, field)
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-    fun findConverter(type: Class<*>, converterType: Class<Converter<Any, Any>>, targetFormat: Class<*>): Converter<Any, Any>? {
+    fun findConverter(type: Class<*>, converterType: Class<out Converter<out Any, out Any>>, targetFormat: Class<*>): Converter<out Any, out Any>? {
         // If the given converter type is the base interface, this is an indicator for using the best converter.
         if (converterType == Converter::class.java) {
-            return this.findConverter(type, targetFormat) as Converter<Any, Any>?
+            return this.findConverter<Any, Any>(type, targetFormat)
         }
 
-        return this.registry.getConverterByType(converterType as Class<Converter<*, *>>) as Converter<Any, Any>
+        return this.registry.getConverterByType(converterType) as Converter<Any, Any>
     }
 
-    private fun <OurType : Any> findConverter(type: Class<OurType>, targetFormat: Class<*>): Converter<out OurType, *>? {
-        return this.registry.getConverterByValueType(type, targetFormat) as Converter<out OurType, *>?
+    private fun <O : Any, T : Any> findConverter(type: Class<out O>, targetFormat: Class<out Any>): Converter<O, T>? {
+        return this.registry.getConverterByValueType(type, targetFormat) as Converter<O, T>?
     }
 
 }

@@ -14,7 +14,7 @@ import java.time.ZoneId
 class OffsetDateTimeToProtoTimestampConverter(private val timeZone: ZoneId = ZoneId.of("CET")) : Converter<OffsetDateTime, Timestamp>(OffsetDateTime::class.java, Timestamp::class.java) {
 
     override fun toTheirs(
-        value: OffsetDateTime?, agent: CopperfieldAgent, ourType: Class<out OffsetDateTime>, targetFormat: Class<Any>,
+        value: OffsetDateTime?, agent: CopperfieldAgent, ourType: Class<out OffsetDateTime>, targetFormat: Class<out Any>,
         field: Field?): Timestamp? {
         val instant = value?.toInstant() ?: return null
         return Timestamp.newBuilder()
@@ -24,7 +24,7 @@ class OffsetDateTimeToProtoTimestampConverter(private val timeZone: ZoneId = Zon
     }
 
     override fun toOurs(
-        value: Timestamp?, agent: CopperfieldAgent, ourType: Class<out OffsetDateTime>, targetFormat: Class<Any>,
+        value: Timestamp?, agent: CopperfieldAgent, ourType: Class<out OffsetDateTime>, targetFormat: Class<out Any>,
         field: Field?): OffsetDateTime? {
         if (value == null) return null
         return OffsetDateTime.ofInstant(Instant.ofEpochSecond(value.seconds, value.nanos.toLong()), this.timeZone)

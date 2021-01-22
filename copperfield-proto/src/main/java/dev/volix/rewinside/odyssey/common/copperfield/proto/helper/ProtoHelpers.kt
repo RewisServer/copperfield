@@ -1,4 +1,4 @@
-package dev.volix.rewinside.odyssey.common.copperfield
+package dev.volix.rewinside.odyssey.common.copperfield.proto.helper
 
 import com.google.protobuf.BoolValue
 import com.google.protobuf.DoubleValue

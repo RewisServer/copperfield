@@ -1,4 +1,4 @@
-package dev.volix.rewinside.odyssey.common.copperfield
+package dev.volix.rewinside.odyssey.common.copperfield.helper
 
 import com.google.common.cache.Cache
 

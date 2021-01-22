@@ -9,14 +9,14 @@ import java.lang.reflect.Field
 class IterableConverter : Converter<Iterable<*>, Iterable<*>>(Iterable::class.java, Iterable::class.java), ValueAware {
 
     override fun toTheirs(
-        value: Iterable<*>?, agent: CopperfieldAgent, ourType: Class<out Iterable<*>>, targetFormat: Class<Any>,
+        value: Iterable<*>?, agent: CopperfieldAgent, ourType: Class<out Iterable<*>>, targetFormat: Class<out Any>,
         field: Field?): Iterable<*>? {
         val valueType = this.getValueType(field)
         return value?.map { agent.toTheirs(it, valueType, targetFormat, field) }
     }
 
     override fun toOurs(
-        value: Iterable<*>?, agent: CopperfieldAgent, ourType: Class<out Iterable<*>>, targetFormat: Class<Any>,
+        value: Iterable<*>?, agent: CopperfieldAgent, ourType: Class<out Iterable<*>>, targetFormat: Class<out Any>,
         field: Field?): Iterable<*>? {
         val valueType = this.getValueType(field)
         return value?.map { agent.toOurs(it, valueType, targetFormat, field) }

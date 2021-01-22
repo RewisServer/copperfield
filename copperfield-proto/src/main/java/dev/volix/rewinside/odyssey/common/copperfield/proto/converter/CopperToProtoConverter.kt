@@ -7,17 +7,17 @@ import com.google.protobuf.Struct
 import com.google.protobuf.StructOrBuilder
 import com.google.protobuf.Value
 import dev.volix.rewinside.odyssey.common.copperfield.CopperConvertable
-import dev.volix.rewinside.odyssey.common.copperfield.TypeMapper
-import dev.volix.rewinside.odyssey.common.copperfield.convertFromValue
-import dev.volix.rewinside.odyssey.common.copperfield.convertToValue
+import dev.volix.rewinside.odyssey.common.copperfield.CopperTypeMapper
 import dev.volix.rewinside.odyssey.common.copperfield.converter.Converter
 import dev.volix.rewinside.odyssey.common.copperfield.converter.CopperConvertableConverter
-import dev.volix.rewinside.odyssey.common.copperfield.getAnnotation
-import dev.volix.rewinside.odyssey.common.copperfield.getBaseValueType
-import dev.volix.rewinside.odyssey.common.copperfield.getOrPut
+import dev.volix.rewinside.odyssey.common.copperfield.helper.getAnnotation
+import dev.volix.rewinside.odyssey.common.copperfield.helper.getOrPut
+import dev.volix.rewinside.odyssey.common.copperfield.helper.snakeToPascalCase
 import dev.volix.rewinside.odyssey.common.copperfield.proto.annotation.CopperProtoClass
 import dev.volix.rewinside.odyssey.common.copperfield.proto.annotation.CopperProtoField
-import dev.volix.rewinside.odyssey.common.copperfield.snakeToPascalCase
+import dev.volix.rewinside.odyssey.common.copperfield.proto.helper.convertFromValue
+import dev.volix.rewinside.odyssey.common.copperfield.proto.helper.convertToValue
+import dev.volix.rewinside.odyssey.common.copperfield.proto.helper.getBaseValueType
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.util.concurrent.TimeUnit
@@ -48,7 +48,7 @@ class CopperToProtoConverter : CopperConvertableConverter<MessageLiteOrBuilder>(
         .expireAfterAccess(5, TimeUnit.MINUTES)
         .build<Triple<String, Class<*>, Class<*>>, Method>()
 
-    override fun createTheirInstance(type: Class<out MessageLiteOrBuilder>, ourType: Class<out CopperConvertable>?): MessageLiteOrBuilder {
+    override fun createTheirInstance(type: Class<out Any>, ourType: Class<out CopperConvertable>?): MessageLiteOrBuilder {
         val annotation = if (ourType == null) null else getAnnotation(ourType, CopperProtoClass::class.java)
         val protoType = annotation?.type?.java ?: type
 
@@ -158,15 +158,15 @@ class CopperToProtoConverter : CopperConvertableConverter<MessageLiteOrBuilder>(
         return super.getName(name, field)
     }
 
-    override fun getConverterType(type: Class<Converter<Any, Any>>, field: Field): Class<Converter<Any, Any>> {
+    override fun getConverterType(type: Class<out Converter<out Any, out Any>>, field: Field): Class<out Converter<out Any, out Any>> {
         val annotation = field.getDeclaredAnnotation(CopperProtoField::class.java)
-        if (annotation != null && annotation.converter != Converter::class) return annotation.converter.java as Class<Converter<Any, Any>>
+        if (annotation != null && annotation.converter != Converter::class) return annotation.converter.java
         return super.getConverterType(type, field)
     }
 
-    override fun getTypeMapper(type: Class<TypeMapper<out CopperConvertable, CopperConvertable>>, field: Field): Class<TypeMapper<out CopperConvertable, CopperConvertable>> {
+    override fun getTypeMapper(type: Class<out CopperTypeMapper<out CopperConvertable, out CopperConvertable>>, field: Field): Class<out CopperTypeMapper<out CopperConvertable, out CopperConvertable>> {
         val annotation = field.getDeclaredAnnotation(CopperProtoField::class.java)
-        if (annotation != null && annotation.typeMapper != TypeMapper::class) return annotation.typeMapper.java as Class<TypeMapper<out CopperConvertable, CopperConvertable>>
+        if (annotation != null && annotation.typeMapper != CopperTypeMapper::class) return annotation.typeMapper.java
         return super.getTypeMapper(type, field)
     }
 

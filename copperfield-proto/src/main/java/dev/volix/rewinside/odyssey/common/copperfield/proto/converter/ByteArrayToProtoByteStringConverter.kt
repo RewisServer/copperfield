@@ -11,14 +11,14 @@ import java.lang.reflect.Field
 class ByteArrayToProtoByteStringConverter : Converter<ByteArray, ByteString>(ByteArray::class.java, ByteString::class.java) {
 
     override fun toTheirs(
-        value: ByteArray?, agent: CopperfieldAgent, ourType: Class<out ByteArray>, targetFormat: Class<Any>,
+        value: ByteArray?, agent: CopperfieldAgent, ourType: Class<out ByteArray>, targetFormat: Class<out Any>,
         field: Field?): ByteString? {
         if (value == null) return null
         return ByteString.copyFrom(value)
     }
 
     override fun toOurs(
-        value: ByteString?, agent: CopperfieldAgent, ourType: Class<out ByteArray>, targetFormat: Class<Any>,
+        value: ByteString?, agent: CopperfieldAgent, ourType: Class<out ByteArray>, targetFormat: Class<out Any>,
         field: Field?): ByteArray? {
         if (value == null) return null
         return value.toByteArray()

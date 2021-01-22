@@ -1,6 +1,4 @@
-package dev.volix.rewinside.odyssey.common.copperfield
-
-import java.lang.reflect.Field
+package dev.volix.rewinside.odyssey.common.copperfield.helper
 
 /**
  * @author Benedikt Wüller

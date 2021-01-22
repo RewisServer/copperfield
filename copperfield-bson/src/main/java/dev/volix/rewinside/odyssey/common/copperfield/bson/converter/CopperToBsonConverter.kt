@@ -1,7 +1,7 @@
 package dev.volix.rewinside.odyssey.common.copperfield.bson.converter
 
 import dev.volix.rewinside.odyssey.common.copperfield.CopperConvertable
-import dev.volix.rewinside.odyssey.common.copperfield.TypeMapper
+import dev.volix.rewinside.odyssey.common.copperfield.CopperTypeMapper
 import dev.volix.rewinside.odyssey.common.copperfield.bson.annotation.CopperBsonField
 import dev.volix.rewinside.odyssey.common.copperfield.converter.Converter
 import dev.volix.rewinside.odyssey.common.copperfield.converter.CopperConvertableConverter
@@ -13,7 +13,7 @@ import java.lang.reflect.Field
  */
 class CopperToBsonConverter : CopperConvertableConverter<Document>(Document::class.java) {
 
-    override fun createTheirInstance(type: Class<out Document>, ourType: Class<out CopperConvertable>?): Document {
+    override fun createTheirInstance(type: Class<out Any>, ourType: Class<out CopperConvertable>?): Document {
         return Document()
     }
 
@@ -46,15 +46,15 @@ class CopperToBsonConverter : CopperConvertableConverter<Document>(Document::cla
         return super.getName(name, field)
     }
 
-    override fun getConverterType(type: Class<Converter<Any, Any>>, field: Field): Class<Converter<Any, Any>> {
+    override fun getConverterType(type: Class<out Converter<out Any, out Any>>, field: Field): Class<out Converter<out Any, out Any>> {
         val annotation = field.getDeclaredAnnotation(CopperBsonField::class.java)
-        if (annotation != null && annotation.converter != Converter::class) return annotation.converter.java as Class<Converter<Any, Any>>
+        if (annotation != null && annotation.converter != Converter::class) return annotation.converter.java
         return super.getConverterType(type, field)
     }
 
-    override fun getTypeMapper(type: Class<TypeMapper<out CopperConvertable, CopperConvertable>>, field: Field): Class<TypeMapper<out CopperConvertable, CopperConvertable>> {
+    override fun getTypeMapper(type: Class<out CopperTypeMapper<out CopperConvertable, out CopperConvertable>>, field: Field): Class<out CopperTypeMapper<out CopperConvertable, out CopperConvertable>> {
         val annotation = field.getDeclaredAnnotation(CopperBsonField::class.java)
-        if (annotation != null && annotation.typeMapper != TypeMapper::class) return annotation.typeMapper.java as Class<TypeMapper<out CopperConvertable, CopperConvertable>>
+        if (annotation != null && annotation.typeMapper != CopperTypeMapper::class) return annotation.typeMapper.java
         return super.getTypeMapper(type, field)
     }
 

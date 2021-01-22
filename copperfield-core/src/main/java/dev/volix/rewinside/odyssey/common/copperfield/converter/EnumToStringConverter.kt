@@ -8,11 +8,11 @@ import java.lang.reflect.Field
  */
 class EnumToStringConverter : Converter<Enum<*>, String>(Enum::class.java, String::class.java) {
 
-    override fun toTheirs(value: Enum<*>?, agent: CopperfieldAgent, ourType: Class<out Enum<*>>, targetFormat: Class<Any>, field: Field?): String? {
+    override fun toTheirs(value: Enum<*>?, agent: CopperfieldAgent, ourType: Class<out Enum<*>>, targetFormat: Class<out Any>, field: Field?): String? {
         return value?.name
     }
 
-    override fun toOurs(value: String?, agent: CopperfieldAgent, ourType: Class<out Enum<*>>, targetFormat: Class<Any>, field: Field?): Enum<*>? {
+    override fun toOurs(value: String?, agent: CopperfieldAgent, ourType: Class<out Enum<*>>, targetFormat: Class<out Any>, field: Field?): Enum<*>? {
         if (value == null) return null
         val method = ourType.getDeclaredMethod("valueOf", String::class.java)
         return method.invoke(null, value) as Enum<*>

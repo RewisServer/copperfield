@@ -10,11 +10,11 @@ import java.lang.reflect.Field
  */
 class BsonObjectIdToStringConverter : Converter<ObjectId, String>(ObjectId::class.java, String::class.java) {
 
-    override fun toTheirs(value: ObjectId?, agent: CopperfieldAgent, ourType: Class<out ObjectId>, targetFormat: Class<Any>, field: Field?): String? {
+    override fun toTheirs(value: ObjectId?, agent: CopperfieldAgent, ourType: Class<out ObjectId>, targetFormat: Class<out Any>, field: Field?): String? {
         return value?.toHexString()
     }
 
-    override fun toOurs(value: String?, agent: CopperfieldAgent, ourType: Class<out ObjectId>, targetFormat: Class<Any>, field: Field?): ObjectId? {
+    override fun toOurs(value: String?, agent: CopperfieldAgent, ourType: Class<out ObjectId>, targetFormat: Class<out Any>, field: Field?): ObjectId? {
         return if (value == null) null else ObjectId(value)
     }
 

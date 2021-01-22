@@ -18,7 +18,7 @@ public class TimedPartyEvent implements CopperConvertable {
 
     public PartyEventType type;
 
-    @CopperField(typeMapper = PartyEventTypeMapper.class)
+    @CopperField(typeMapper = PartyEventCopperTypeMapper.class)
     public PartyEvent details;
 
 }

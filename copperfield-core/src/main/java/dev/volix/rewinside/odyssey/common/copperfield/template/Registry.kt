@@ -7,9 +7,9 @@ import dev.volix.rewinside.odyssey.common.copperfield.converter.Converter
  */
 abstract class Registry {
 
-    protected val defaultConverterTypes = mutableMapOf<Class<*>, Class<out Converter<*, *>>>()
-    protected val converterTypes = mutableMapOf<Class<*>, MutableMap<Class<*>, Class<out Converter<*, *>>>>()
-    protected val converters = mutableMapOf<Class<out Converter<*, *>>, Converter<*, *>>()
+    private val defaultConverterTypes = mutableMapOf<Class<*>, Class<out Converter<*, *>>>()
+    private val converterTypes = mutableMapOf<Class<*>, MutableMap<Class<*>, Class<out Converter<*, *>>>>()
+    private val converters = mutableMapOf<Class<out Converter<*, *>>, Converter<*, *>>()
 
     @JvmOverloads
     fun with(ourType: Class<*>, converterType: Class<out Converter<*, *>>, targetFormat: Class<*>? = null): Registry {
