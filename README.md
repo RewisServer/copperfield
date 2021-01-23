@@ -50,8 +50,8 @@ default. All converters support conversion in both directions by default, howeve
 
 ### Converter Registries
 
-`Registries` contain the required mappings and instantiated converter instances available to the agent. Every instantiated agent uses mappings
-defined in the [BaseRegistry](copperfield-core/src/main/java/dev/volix/rewinside/odyssey/common/copperfield/registry/BaseRegistry.kt) by default.
+`Registries` contain the required mappings and instantiated converters available to the agent. Every instantiated agent uses mappings defined in the
+[BaseRegistry](copperfield-core/src/main/java/dev/volix/rewinside/odyssey/common/copperfield/registry/BaseRegistry.kt) by default.
 
 You can pass additional `Registries` to the agent at construction time. This will [combine the registries](#combine-registries) and discard the
 original instances afterwards.
@@ -118,10 +118,33 @@ mapped converter classes are exactly the same.
 
 ### Conversion Context
 
-TODO
-* Context
-* converter context
-* agent context
+In the examples above, only one `Converter` could be defined for every given input type (e.g. every `UUID` will be converted to a `String`). However,
+there might be instances where you do not want the UUIDs to be converted to String but rather to their binary representation. This is where `context`
+comes into play.
+
+For example:
+```java
+agent.toTheirs(uuid); // "Convert the UUID without context" (default converter)
+agent.toTheirs(uuid, byte[].class); // "Convert the UUID in the context of a byte array."
+
+agent.toOurs(string, UUID.class); // "Convert the value to a UUID without context" (default converter)
+agent.toOurs(bytes, UUID.class, byte[].class); // "Convert the value to a UUID in the context of a byte array".
+```
+
+As you can see, the context basically defines "their" value type (i.e. the output type/format) or a matching supertype.
+
+When [adding converters](#add-converters) to a `Registry`, you can optionally define the `context` for which the converters should be available.
+
+```java
+Registry registry = // ...
+registry.with(UUID.class, UuidToByteArrayConverter.class, byte[].class);
+```
+
+The agent will use this converter for this context (in this case `byte[]`) or any of it's derived classes only. Otherwise, the agent will fall back
+to any converter registered without any context.
+
+[Removing converters](#remove-converters) while defining a context will remove this converter from the given context only. If there is no converter
+registered specifically for this context, nothing will happen.
 
 ### POJO Conversion
 
