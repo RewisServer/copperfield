@@ -4,14 +4,41 @@ A flexible, lightweight library to do ORMs using annotations (and magic).
 
 [[_TOC_]]
 
-## Getting Started
+## Setup
 
+Import the `copperfield-core` module at the very least.
 
+```xml
+<dependency>
+  <groupId>dev.volix.rewinside.odyssey.common</groupId>
+  <artifactId>copperfield-core</artifactId>
+  <version>2.0.0</version>
+</dependency>
+```
 
-TODO
-* Maven dependency
-* Bson dependency
-* Proto dependency
+### Bson
+
+If you want to convert data from and to [bson documents](#bson-conversion), import the `copperfield-bson` module as well.
+
+```xml
+<dependency>
+  <groupId>dev.volix.rewinside.odyssey.common</groupId>
+  <artifactId>copperfield-bson</artifactId>
+  <version>2.0.0</version>
+</dependency>
+```
+
+### Proto
+
+If you want to convert data from and to [proto messages](#proto-conversion), import the `copperfield-proto` module as well.
+
+```xml
+<dependency>
+  <groupId>dev.volix.rewinside.odyssey.common</groupId>
+  <artifactId>copperfield-proto</artifactId>
+  <version>2.0.0</version>
+</dependency>
+```
 
 ## Usage
 
@@ -40,7 +67,7 @@ The agent internally selects the converter matching the type, or the classes sup
 default. All converters support conversion in both directions by default, however there are some exceptions.
 
 | Our Type | Their Type | Converter | Comment |
-| ---------- | ----------- | --------- | ------- |
+| -------- | ---------- | --------- | ------- |
 | `UUID` | `String` | `UuidToStringConverter` | Converts uuids to strings using `toString()`. |
 | `Enum` | `String` | `EnumToStringConverter` | Converts enums to their corresponding names. |
 | `OffsetDateTime` | `String` | `OffsetDateTimeToStringConverter` | Converts datetime instances to ISO 8601 strings. |
@@ -116,6 +143,14 @@ agent.getRegistry().without(new BaseRegistry());
 In this example, all converter mappings and instances defined in the `BaseRegistry` will be removed from the agent's registry if both types and
 mapped converter classes are exactly the same.
 
+#### Available Converters
+
+These converters exist but are not registered by default.
+
+| Our Type | Their Type | Converter | Comment |
+| -------- | ---------- | --------- | ------- |
+| `Object` | `Object` | `NoOperationConverter` | Can be used to explicitly mark a type to not be converted. |
+
 ### Conversion Context
 
 In the examples above, only one `Converter` could be defined for every given input type (e.g. every `UUID` will be converted to a `String`). However,
@@ -148,25 +183,176 @@ registered specifically for this context, nothing will happen.
 
 ### POJO Conversion
 
-TODO
-* CopperConvertable
-* CopperField / CopperFields / CopperIgnore
-* Iterables / Maps
+Up until now we covered how to convert single values. Let's say you want to convert a POJO to an external data format (e.g. Bson Documents). You
+_could_ write a custom `Converter` which handles conversion in both directions and register it in the `Registry`. But then you might want to convert
+the same POJO to another data format as well. You would have to write new converters for every single data format, for every POJO you might want to
+convert to and from.
+
+This is where `CopperConvertables` come into play. This functionality allows you to define all class members you want to convert to/from once while
+using the same definition for multiple different target formats.
+
+Let's start with an example:
+
+```java
+public class TimedPartyEvent {
+
+    private OffsetDateTime at;
+
+    private PartyEventType type;
+    
+    private boolean someInternalFlag;
+
+}
+```
+
+In this example we want the `TimedPartyEvent` to be converted into arbitrary target formats (`contexts`). The first step would be to implement the
+`CopperConvertable` interface and annotate all fields we want to be included with the `@CopperField` annotation.
+
+```java
+public class TimedPartyEvent implements CopperConvertable {
+
+    @CopperField
+    private OffsetDateTime at;
+
+    @CopperField
+    private PartyEventType type;
+    
+    private boolean someInternalFlag;
+
+}
+```
+
+Done, that's basically all there is to the basic POJO definition.
+
+#### The @CopperField Annotation
+
+The `@CopperField` annotation provides some properties to override or extend the functionality for each field.
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| `name` | `String` | The name to use for the external formats. Defaults to the `snake_cased` field name. |
+| `converter` | `Converter.class` | The converter to use for this field specifically. Defaults to the closest relative converter defined in the agent's registry for the context used. |
+| `typeMapper` | `CopperTypeMapper.class` | The type mapper to use. Defaults to none. See [Advanced Usage / Type Mappers](#type-mappers). |
+
+#### The @CopperFields Annotation
+
+Instead of annotating all class members with `@CopperField`, you can annotate the class itself (or any of it's supertypes or implemented interfaces).
+Individual fields can additionally be annotated with `@CopperField`, if functionality needs to be altered for those specifically.
+
+#### The @CopperIgnore Annotation
+
+To exclude a field from `@CopperFields` you can use the `@CopperIgnore` annotation without arguments. If you want to exclude this field for one or
+more specific contexts, you can provide a list of matching context classes.
+
+#### Iterables / Maps
+
+Because generic types are only hints for the compiler, they are not available at runtime. This will cause values of `Iterables` to not be converted
+back to their original types when converting `toOurs`. To fix this behavior, you may annotate the iterable field with `@CopperValueType`, defining
+the same type defined in the generic parameter.
+
+```java
+@CopperField
+@CopperValueType(UUID.class)
+private final List<UUID> uuids = new ArrayList<>();
+```
+
+The `@CopperKeyType` annotation provides the same functionality for keys of `Map` fields.
 
 ### Bson Conversion
 
-TODO
+The `copperfield-bson` module implements provides the `BsonRegistry` containing these default converters for the `Document` context.
+
+| Our Type | Their Type | Converter | Comment |
+| -------- | ---------- | --------- | ------- |
+| `CopperConvertable` | `Document` | `CopperToBsonConverter` | Converts classes implementing `CopperConvertable` to bson `Documents`. |
+| `byte[]` | `Binary` | `ByteArrayToBsonBinaryConverter` | Converts byte arrays to the bson `Binary` format. |
+| `ObjectId` | `ObjectId` | `NoOperationConverter` | Does not convert `ObjectIds` at all in the `Document` context. |
+
+As well as this default converter when not converting in the `Document` context.
+
+| Our Type | Their Type | Converter | Comment |
+| -------- | ---------- | --------- | ------- |
+| `ObjectId` | `String` | `BsonObjectIdToStringConverter` | Converts `ObjectIds` to the hex string representation. |
+
+If you want to override the converter used for a specific field for the `Document` context only, you can annotate the `@CopperBsonField` annotation
+in addition to `@CopperFields` or `@CopperField`. The annotation shares the signature with [the @CopperField annotation](#the-copperfield-annotation)
+and will fall back to the values defined in the `@CopperField` annotation.
 
 ### Proto Conversion
 
-TODO
+The `copperfield-proto` module implements provides the `ProtoRegistry` containing these default converters for the `MessageLiteOrBuilder` context.
+
+| Our Type | Their Type | Converter | Comment |
+| -------- | ---------- | --------- | ------- |
+| `CopperConvertable` | `MessageLiteOrBuilder` | `CopperToProtoConverter` | Converts classes implementing `CopperConvertable` to `MessageLiteOrBuilders`. |
+| `byte[]` | `ByteString` | `ByteArrayToProtoByteStringConverter` | Converts byte arrays to the proto `ByteString` format. |
+| `Map` | `Struct` | `MapToProtoStructConverter` | Converts `Maps` to proto `Structs`. |
+
+This converter exists but is not registered by default.
+
+| Our Type | Their Type | Converter | Comment |
+| -------- | ---------- | --------- | ------- |
+| `OffsetDateTime` | `Timestamp` | `OffsetDateTimeToProtoTimestampConverter` | Converts `OffsetDateTimes` to proto `Timestamps` using the given timezone. |
+
+If you want to override the converter used for a specific field for the `MessageLiteOrBuilder` context only, you can annotate the
+`@CopperProtoField` annotation in addition to `@CopperFields` or `@CopperField`. The annotation shares the signature with
+[the @CopperField annotation](#the-copperfield-annotation) and will fall back to the values defined in the `@CopperField` annotation.
+
+**Note**: To convert `CopperConvertables` to and from proto messages, you _have to_ annotate the class with `@CopperProtoClass`. The given type
+should be a type diverging from `MessageLiteOrBuilder` which this POJO represents.
+
+```java
+@CopperFields
+@CopperProtoField(type = PartyProtos.PartyEvent)
+public class TimedPartyEvent implements CopperConvertable {
+
+    private OffsetDateTime at;
+
+    private PartyEventType type;
+
+}
+```
 
 ## Advanced Usage
 
-### Custom Converters
-
-TODO
-
 ### Type Mappers
 
-TODO
+The explanation will be based on the following example.
+
+```java
+@CopperFields
+@CopperProtoField(type = PartyProtos.PartyEvent)
+public class TimedPartyEvent implements CopperConvertable {
+
+    private OffsetDateTime at;
+
+    private PartyEventType type;
+    
+    private PartyEvent event;
+
+}
+```
+
+Let's assume `PartyEvent` is an interface. Converting the event `toTheirs` will work no problem because the agent will use the value's concrete
+type. However, converting it back `toOurs` will lose the concrete `PartyEvent` type resulting in an exception, because the `PartyEvent` interface
+can not be instantiated.
+
+To map the interface to a concrete class, copperfield provides `CopperTypeMappers`.
+
+```java
+public class PartyEventTypeMapper extends CopperTypeMapper<TimedPartyEvent, PartyEvent> {
+
+    public PartyEventCopperTypeMapper() {
+        super("type");
+    }
+
+    @NotNull @Override
+    public Class<? extends PartyEvent> mapType(final TimedPartyEvent instance, @NotNull final Class<?> valueType) {
+        return instance.type.type;
+    }
+
+}
+```
+
+The type mapper declares, which fields are essential to decide on the concrete class. Copperfield makes sure that the required fields will be
+populated on the `instance` if their corresponding values are not null and as long as there are no cylcic field requirements.

@@ -16,5 +16,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface CopperIgnore {
-    Class[] contextTypes() default {Object.class };
+    Class[] contextTypes() default { Object.class };
 }

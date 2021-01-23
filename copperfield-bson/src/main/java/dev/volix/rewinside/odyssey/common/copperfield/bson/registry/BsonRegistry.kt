@@ -5,6 +5,7 @@ import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.BsonObjectI
 import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.ByteArrayToBsonBinaryConverter
 import dev.volix.rewinside.odyssey.common.copperfield.bson.converter.CopperToBsonConverter
 import dev.volix.rewinside.odyssey.common.copperfield.bson.registry.BsonRegistry.Companion.BSON_CONTEXT
+import dev.volix.rewinside.odyssey.common.copperfield.converter.NoOperationConverter
 import dev.volix.rewinside.odyssey.common.copperfield.registry.Registry
 import org.bson.Document
 import org.bson.types.ObjectId
@@ -31,6 +32,7 @@ class BsonRegistry : Registry() {
     init {
         this.with(ByteArray::class.java, ByteArrayToBsonBinaryConverter::class.java, BSON_CONTEXT)
         this.with(CopperConvertable::class.java, CopperToBsonConverter::class.java, BSON_CONTEXT)
+        this.with(ObjectId::class.java, NoOperationConverter::class.java, BSON_CONTEXT)
 
         // Support for cross conversions.
         this.with(ObjectId::class.java, BsonObjectIdToStringConverter::class.java)
