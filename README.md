@@ -111,7 +111,7 @@ agent.getRegistry().with(UUID.class, UuidToUpperCaseStringConverter.class);
 
 **Note**: If another converter already exists for the given type (e.g. `UUID`), the previous one will be overridden.
 
-#### Remove converters
+#### Remove Converters
 
 To remove converters, you can use the `without()` method.
 
@@ -143,7 +143,7 @@ agent.getRegistry().without(new BaseRegistry());
 In this example, all converter mappings and instances defined in the `BaseRegistry` will be removed from the agent's registry if both types and
 mapped converter classes are exactly the same.
 
-#### Available Converters
+#### Additional Converters
 
 These converters exist but are not registered by default.
 
