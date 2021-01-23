@@ -2,6 +2,8 @@
 
 A flexible, lightweight library to do ORMs using annotations (and magic).
 
+![just copperfield things](./.gitlab/assets/copperfield.png)
+
 [[_TOC_]]
 
 ## Setup
