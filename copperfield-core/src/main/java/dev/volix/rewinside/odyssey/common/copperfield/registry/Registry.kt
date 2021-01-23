@@ -37,7 +37,12 @@ abstract class Registry {
      */
     @JvmOverloads
     open fun with(ourType: Class<*>, converterType: Class<out Converter<*, *>>, contextType: Class<*>? = null): Registry {
-        return this.with(ourType, this.getConverterByType(converterType), contextType)
+        if (contextType == null) {
+            this.defaultConverterTypes[ourType] = converterType
+        } else {
+            this.converterTypes.getOrPut(contextType) { mutableMapOf() }[ourType] = converterType
+        }
+        return this
     }
 
     /**
