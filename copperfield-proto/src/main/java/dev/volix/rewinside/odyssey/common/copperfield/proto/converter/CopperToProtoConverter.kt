@@ -155,7 +155,7 @@ class CopperToProtoConverter : CopperConvertableConverter<MessageLiteOrBuilder>(
                 if (method.parameterCount != 1) return@firstOrNull false
                 val parameter = method.parameterTypes.first()
                 parameter.isAssignableFrom(type) || (valueType != null && parameter.isAssignableFrom(valueType))
-            } ?: throw RuntimeException("Unable to find setter method for $type.")
+            } ?: throw RuntimeException("Unable to find setter method for ${type.name}.")
         }
     }
 
