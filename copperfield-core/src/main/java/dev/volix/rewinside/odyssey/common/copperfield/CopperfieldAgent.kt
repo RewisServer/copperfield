@@ -2,6 +2,7 @@ package dev.volix.rewinside.odyssey.common.copperfield
 
 import dev.volix.rewinside.odyssey.common.copperfield.converter.Converter
 import dev.volix.rewinside.odyssey.common.copperfield.exception.CopperFieldException
+import dev.volix.rewinside.odyssey.common.copperfield.exception.NoConverterFoundException
 import dev.volix.rewinside.odyssey.common.copperfield.registry.BaseRegistry
 import dev.volix.rewinside.odyssey.common.copperfield.registry.Registry
 import java.lang.reflect.Field
@@ -38,8 +39,12 @@ open class CopperfieldAgent(private vararg val registries: Registry) {
      * If you want to convert the [value] for a given context, use [toTheirs] with the contextType. This may be desired if there are divergent
      * [Converter]s for specific contexts.
      */
-    fun <O : Any> toTheirs(value: O): Any? {
+    fun <O : Any> toTheirs(value: O?): Any {
         return this.toTheirs(value, Any::class.java)
+    }
+
+    fun <O : Any> toTheirsOrNull(value: O?): Any? {
+        return this.toTheirsOrNull(value, Any::class.java)
     }
 
     /**
@@ -50,8 +55,12 @@ open class CopperfieldAgent(private vararg val registries: Registry) {
      * If the [contextType] is of type [Any] or [Object], no context specific converters will be used. The [contextType] is passed to all underlying
      * converters recursively.
      */
-    fun <O : Any, T : Any> toTheirs(value: O, contextType: Class<out T>): T? {
-        return this.toTheirs(value, value.javaClass, contextType, null)
+    fun <O : Any, T : Any> toTheirs(value: O?, contextType: Class<out T>): T {
+        return this.toTheirs(value, value?.javaClass ?: Any::class.java, contextType, null)!!
+    }
+
+    fun <O : Any, T : Any> toTheirsOrNull(value: O?, contextType: Class<out T>): T? {
+        return this.toTheirs(value, value?.javaClass ?: Any::class.java, contextType, null)
     }
 
     /**
@@ -73,7 +82,7 @@ open class CopperfieldAgent(private vararg val registries: Registry) {
         if (converter == null) {
             if (value == null) return null
             if (contextType.isAssignableFrom(value.javaClass)) return value as T
-            throw CopperFieldException(field, contextType,
+            throw NoConverterFoundException(field, contextType,
                     "No converter could be found for the given value with ourType ${ourType.name}. " +
                     "Did you provide a converter or registry for context ${contextType.name} to the agent?"
             )
@@ -116,7 +125,11 @@ open class CopperfieldAgent(private vararg val registries: Registry) {
      * Converts the [value] of any type to a type assignable from [O] if there is a converter defined in the [registry] matching those types. If
      * there is no converter, the [value] will be returned as is if it is assignable from [O]. Otherwise an [IllegalArgumentException] is thrown.
      */
-    fun <O : Any> toOurs(value: Any?, ourType: Class<out O>): O? {
+    fun <O : Any> toOurs(value: Any?, ourType: Class<out O>): O {
+        return this.toOurs(value, ourType, value?.javaClass ?: Any::class.java, null)!!
+    }
+
+    fun <O : Any> toOursOrNull(value: Any?, ourType: Class<out O>): O? {
         return this.toOurs(value, ourType, value?.javaClass ?: Any::class.java, null)
     }
 
@@ -137,7 +150,7 @@ open class CopperfieldAgent(private vararg val registries: Registry) {
         if (converter == null) {
             if (value == null) return null
             if (ourType.isAssignableFrom(value.javaClass)) return value as O
-            throw CopperFieldException(field, contextType,
+            throw NoConverterFoundException(field, contextType,
                     "No converter could be found for the given value with ourType ${ourType.name}. " +
                     "Did you provide a converter or registry for context ${contextType.name} to the agent?"
             )

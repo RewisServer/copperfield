@@ -5,7 +5,13 @@ import java.lang.reflect.Field
 /**
  * @author Benedikt Wüller
  */
-class CopperFieldException : RuntimeException {
+open class CopperFieldException : RuntimeException {
+
+    constructor(message: String) : super(message)
+
+    constructor(message: String, throwable: Throwable) : super(message, throwable)
+
+    constructor(throwable: Throwable) : super(throwable)
 
     constructor(field: Field?, contextType: Class<out Any>, message: String?) : super(createMessage(field, contextType, message))
 
