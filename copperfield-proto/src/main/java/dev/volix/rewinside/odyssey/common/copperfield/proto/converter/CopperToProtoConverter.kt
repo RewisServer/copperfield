@@ -10,6 +10,7 @@ import dev.volix.rewinside.odyssey.common.copperfield.CopperConvertable
 import dev.volix.rewinside.odyssey.common.copperfield.CopperTypeMapper
 import dev.volix.rewinside.odyssey.common.copperfield.converter.Converter
 import dev.volix.rewinside.odyssey.common.copperfield.converter.CopperConvertableConverter
+import dev.volix.rewinside.odyssey.common.copperfield.helper.convertToType
 import dev.volix.rewinside.odyssey.common.copperfield.helper.getAnnotation
 import dev.volix.rewinside.odyssey.common.copperfield.helper.getOrPut
 import dev.volix.rewinside.odyssey.common.copperfield.helper.snakeToPascalCase
@@ -72,7 +73,11 @@ class CopperToProtoConverter : CopperConvertableConverter<MessageLiteOrBuilder>(
         val getter = this.getGetterMethod(name, instance.javaClass, type)
 
         if (instance is StructOrBuilder) {
-            return convertFromStructValue(getter.invoke(instance, name, null) as Value?)
+            val value = convertFromStructValue(getter.invoke(instance, name, null) as Value?)
+            if (value is Number && Number::class.java.isAssignableFrom(type)) {
+                return value.convertToType(type as Class<out Number>)
+            }
+            return value
         } else {
             if (exists == null || exists.invoke(instance) == true) {
                 return convertFromValue(getter.invoke(instance))
