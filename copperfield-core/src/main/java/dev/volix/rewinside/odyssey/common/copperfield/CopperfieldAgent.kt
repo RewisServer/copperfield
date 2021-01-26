@@ -117,7 +117,7 @@ open class CopperfieldAgent(private vararg val registries: Registry) {
      * there is no converter, the [value] will be returned as is if it is assignable from [O]. Otherwise an [IllegalArgumentException] is thrown.
      */
     fun <O : Any> toOurs(value: Any?, ourType: Class<out O>): O? {
-        return this.toOurs(value, ourType, Any::class.java, null)
+        return this.toOurs(value, ourType, value?.javaClass ?: Any::class.java, null)
     }
 
     /**
