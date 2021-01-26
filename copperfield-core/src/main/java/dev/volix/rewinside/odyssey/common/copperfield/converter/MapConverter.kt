@@ -3,14 +3,13 @@ package dev.volix.rewinside.odyssey.common.copperfield.converter
 import dev.volix.rewinside.odyssey.common.copperfield.CopperfieldAgent
 import dev.volix.rewinside.odyssey.common.copperfield.KeyAware
 import dev.volix.rewinside.odyssey.common.copperfield.ValueAware
+import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperMapType
 import java.lang.reflect.Field
 
 /**
  * Converts [Map]s to a new [Map] with transformed keys and values based on the defined types in the optional
  * [dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperKeyType] and
  * [dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperValueType] annotations.
- *
- * TODO: Uses the configured converters or falls back to the default ones.
  *
  * @author Benedikt Wüller
  */
@@ -35,9 +34,19 @@ class MapConverter : Converter<Map<*, *>, Map<*, *>>(Map::class.java, Map::class
         val valueType = this.getValueType(field)
         val keyType = this.getKeyType(field)
 
-        return value
+        val convertedMap = value
             .mapKeys { agent.toOurs(it, keyType, contextType, field) }
             .mapValues { agent.toOurs(it, valueType, contextType, field) }
+
+        val map = this.getMapType(field).newInstance()
+        map.putAll(convertedMap as Map<out Any, Any?>)
+        return map
+    }
+
+    private fun getMapType(field: Field?): Class<out MutableMap<Any, Any?>> {
+        val annotation = field?.getDeclaredAnnotation(CopperMapType::class.java)
+        if (annotation != null) return annotation.type.java as Class<out MutableMap<Any, Any?>>
+        return HashMap::class.java as Class<out MutableMap<Any, Any?>>
     }
 
 }

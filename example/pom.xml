@@ -37,6 +37,16 @@
       <artifactId>party</artifactId>
       <version>[0.0,)</version>
     </dependency>
+    <dependency>
+      <groupId>org.mongodb</groupId>
+      <artifactId>bson</artifactId>
+      <version>4.1.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java</artifactId>
+      <version>3.13.0</version>
+    </dependency>
   </dependencies>
 
 </project>
