@@ -10,6 +10,7 @@ import com.google.protobuf.NullValue
 import com.google.protobuf.StringValue
 import com.google.protobuf.Struct
 import com.google.protobuf.Value
+import dev.volix.rewinside.odyssey.common.copperfield.exception.CopperFieldException
 
 /**
  * @author Benedikt Wüller
@@ -22,7 +23,7 @@ import com.google.protobuf.Value
 fun convertMapToStruct(map: Map<*, *>): Struct {
     return Struct.newBuilder().putAllFields(
         map.mapKeys { (key, _) ->
-            if (key !is String) throw IllegalStateException("Expected key of type string in map. Found ${key?.javaClass}.")
+            if (key !is String) throw CopperFieldException("Expected key of type string in map. Found ${key?.javaClass}.")
             return@mapKeys key
         }.mapValues { convertToStructValue(it.value) }
     ).build()
@@ -64,7 +65,7 @@ fun convertToStructValue(value: Any?): Value {
         is Map<*, *> -> builder.structValue = convertMapToStruct(value)
         is Iterable<*> -> builder.listValue = convertIterableToListValue(value)
         is Value -> return value
-        else -> throw IllegalArgumentException("Invalid value ${value.javaClass}.")
+        else -> throw CopperFieldException("Invalid struct value ${value.javaClass}.")
     }
     return builder.build()
 }
@@ -81,7 +82,7 @@ fun convertFromStructValue(value: Value?, structToMap: Boolean = false): Any? {
         Value.KindCase.BOOL_VALUE -> value.boolValue
         Value.KindCase.STRUCT_VALUE -> if (structToMap) convertStructToMap(value.structValue) else value.structValue
         Value.KindCase.LIST_VALUE -> convertListValueToIterable(value.listValue)
-        else -> throw IllegalArgumentException("KindCase ${value.kindCase} is not supported.")
+        else -> throw CopperFieldException("KindCase ${value.kindCase} is not supported.")
     }
 }
 

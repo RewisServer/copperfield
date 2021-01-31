@@ -24,8 +24,8 @@ class MapConverter : Converter<Map<*, *>, Map<*, *>>(Map::class.java, Map::class
         val keyType = this.getKeyType(field)
 
         return value
-            .mapKeys { agent.toTheirs(it, keyType, contextType, field) }
-            .mapValues { agent.toTheirs(it, valueType, contextType, field) }
+            .mapKeys { agent.toTheirs(it.key, keyType, contextType, field) }
+            .mapValues { agent.toTheirs(it.value, valueType, contextType, field) }
     }
 
     override fun toOurs(value: Map<*, *>?, agent: CopperfieldAgent, ourType: Class<out Map<*, *>>, contextType: Class<out Any>, field: Field?): Map<*, *> {
@@ -35,8 +35,8 @@ class MapConverter : Converter<Map<*, *>, Map<*, *>>(Map::class.java, Map::class
         val keyType = this.getKeyType(field)
 
         val convertedMap = value
-            .mapKeys { agent.toOurs(it, keyType, contextType, field) }
-            .mapValues { agent.toOurs(it, valueType, contextType, field) }
+            .mapKeys { agent.toOurs(it.key, keyType, contextType, field) }
+            .mapValues { agent.toOurs(it.value, valueType, contextType, field) }
 
         val map = this.getMapType(field).newInstance()
         map.putAll(convertedMap as Map<out Any, Any?>)

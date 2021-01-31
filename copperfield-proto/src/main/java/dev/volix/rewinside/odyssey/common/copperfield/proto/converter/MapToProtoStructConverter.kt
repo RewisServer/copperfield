@@ -29,7 +29,7 @@ class MapToProtoStructConverter : Converter<Map<*, *>, Struct>(Map::class.java, 
 
     override fun toTheirs(value: Map<*, *>?, agent: CopperfieldAgent, ourType: Class<out Map<*, *>>, contextType: Class<out Any>, field: Field?): Struct? {
         val map = agent.toTheirsWithConverter(value, ourType, MapConverter::class.java, contextType, field) ?: return null
-        return convertMapToStruct(map)
+        return convertMapToStruct(map as Map<*, *>)
     }
 
     override fun toOurs(value: Struct?, agent: CopperfieldAgent, ourType: Class<out Map<*, *>>, contextType: Class<out Any>, field: Field?): Map<*, *>? {

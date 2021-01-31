@@ -20,9 +20,11 @@ public class Main {
         final CopperfieldAgent agent = new CopperfieldAgent(new BsonRegistry(), new ProtoRegistry());
 
         final Document document = agent.toTheirs(party, Document.class);
+        System.out.println(document.toJson());
         final Party bsonCopy = agent.toOurs(document, Party.class);
 
         final PartyProtos.Party proto = agent.toTheirs(party, PartyProtos.Party.class);
+        System.out.println(proto.toString());
         final Party protoCopy = agent.toOurs(proto, Party.class);
 
         final String foo = "bar";
@@ -38,7 +40,7 @@ public class Main {
         final PartyMember member = new PartyMember();
         member.uuid = UUID.randomUUID();
         member.rank = "MEMBER";
-        party.members.add(member);
+        party.members.put(member.uuid.toString(), member);
 
         party.settings.cockLengthInCentimeters = 25.0;
 

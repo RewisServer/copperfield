@@ -2,7 +2,6 @@ package dev.volix.rewinside.odyssey.common.copperfield
 
 import dev.volix.rewinside.odyssey.common.copperfield.converter.Converter
 import dev.volix.rewinside.odyssey.common.copperfield.exception.CopperFieldException
-import dev.volix.rewinside.odyssey.common.copperfield.exception.NoConverterFoundException
 import dev.volix.rewinside.odyssey.common.copperfield.registry.BaseRegistry
 import dev.volix.rewinside.odyssey.common.copperfield.registry.Registry
 import java.lang.reflect.Field
@@ -56,11 +55,11 @@ open class CopperfieldAgent(private vararg val registries: Registry) {
      * converters recursively.
      */
     fun <O : Any, T : Any> toTheirs(value: O?, contextType: Class<out T>): T {
-        return this.toTheirs(value, value?.javaClass ?: Any::class.java, contextType, null)!!
+        return this.toTheirs(value, value?.javaClass ?: Any::class.java, contextType, null)!! as T
     }
 
     fun <O : Any, T : Any> toTheirsOrNull(value: O?, contextType: Class<out T>): T? {
-        return this.toTheirs(value, value?.javaClass ?: Any::class.java, contextType, null)
+        return this.toTheirs(value, value?.javaClass ?: Any::class.java, contextType, null) as T
     }
 
     /**
@@ -73,19 +72,14 @@ open class CopperfieldAgent(private vararg val registries: Registry) {
      *
      * The [field] should be defined if the conversion is happening in the context of a [Field].
      */
-    @Suppress("UNCHECKED_CAST")
     @JvmOverloads
-    fun <O : Any, T : Any> toTheirs(value: O?, ourType: Class<out O>, contextType: Class<out T>, field: Field? = null): T? {
+    fun <O : Any, T : Any> toTheirs(value: O?, ourType: Class<out O>, contextType: Class<out T>, field: Field? = null): Any? {
         val converter = this.findConverter<O, T>(ourType, contextType)
 
         // Try to recover, if there is no converter.
         if (converter == null) {
             if (value == null) return null
-            if (contextType.isAssignableFrom(value.javaClass)) return value as T
-            throw NoConverterFoundException(field, contextType,
-                    "No converter could be found for the given value with ourType ${ourType.name}. " +
-                    "Did you provide a converter or registry for context ${contextType.name} to the agent?"
-            )
+            return value as T
         }
 
         return this.toTheirsWithConverter(value, ourType, converter, contextType, field)
@@ -100,7 +94,7 @@ open class CopperfieldAgent(private vararg val registries: Registry) {
      * The [field] should be defined if the conversion is happening in the context of a [Field].
      */
     @JvmOverloads
-    fun <O : Any, T : Any> toTheirsWithConverter(value: O?, ourType: Class<out O>, converterType: Class<out Converter<out O, out T>>, contextType: Class<out Any>, field: Field? = null): T? {
+    fun <O : Any, T : Any> toTheirsWithConverter(value: O?, ourType: Class<out O>, converterType: Class<out Converter<out O, out T>>, contextType: Class<out Any>, field: Field? = null): Any? {
         return this.toTheirsWithConverter(value, ourType, this.registry.getConverterByType(converterType), contextType, field)
     }
 
@@ -111,9 +105,8 @@ open class CopperfieldAgent(private vararg val registries: Registry) {
      *
      * The [field] should be defined if the conversion is happening in the context of a [Field].
      */
-    @Suppress("UNCHECKED_CAST")
     @JvmOverloads
-    fun <O : Any, T : Any> toTheirsWithConverter(value: O?, ourType: Class<out O>, converter: Converter<out O, out T>, contextType: Class<out Any>, field: Field? = null): T? {
+    fun <O : Any, T : Any> toTheirsWithConverter(value: O?, ourType: Class<out O>, converter: Converter<out O, out T>, contextType: Class<out Any>, field: Field? = null): Any? {
         try {
             return (converter as Converter<O, T>).toTheirs(value, this, ourType, contextType, field)
         } catch (ex: Exception) {
@@ -142,18 +135,13 @@ open class CopperfieldAgent(private vararg val registries: Registry) {
      *
      * The [field] should be defined if the conversion is happening in the context of a [Field].
      */
-    @Suppress("UNCHECKED_CAST")
     @JvmOverloads
     fun <O : Any, T : Any> toOurs(value: T?, ourType: Class<out O>, contextType: Class<out T>, field: Field? = null): O? {
         val converter = this.findConverter<O, T>(ourType, contextType)
 
         if (converter == null) {
             if (value == null) return null
-            if (ourType.isAssignableFrom(value.javaClass)) return value as O
-            throw NoConverterFoundException(field, contextType,
-                    "No converter could be found for the given value with ourType ${ourType.name}. " +
-                    "Did you provide a converter or registry for context ${contextType.name} to the agent?"
-            )
+            return value as O
         }
 
         return this.toOursWithConverter(value, ourType, converter, contextType, field)
@@ -179,7 +167,6 @@ open class CopperfieldAgent(private vararg val registries: Registry) {
      *
      * The [field] should be defined if the conversion is happening in the context of a [Field].
      */
-    @Suppress("UNCHECKED_CAST")
     @JvmOverloads
     fun <O : Any, T : Any> toOursWithConverter(value: T?, ourType: Class<out O>, converter: Converter<out O, out T>, contextType: Class<out Any>, field: Field? = null): O? {
         try {
