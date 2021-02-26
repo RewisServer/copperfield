@@ -8,6 +8,7 @@ import dev.volix.rewinside.odyssey.common.copperfield.CopperfieldAgent
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperField
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperFields
 import dev.volix.rewinside.odyssey.common.copperfield.annotation.CopperIgnore
+import dev.volix.rewinside.odyssey.common.copperfield.exception.CopperFieldException
 import dev.volix.rewinside.odyssey.common.copperfield.helper.camelToSnakeCase
 import dev.volix.rewinside.odyssey.common.copperfield.helper.getAnnotation
 import dev.volix.rewinside.odyssey.common.copperfield.helper.getOrPut
@@ -38,24 +39,28 @@ abstract class CopperConvertableConverter<T : Any>(theirType: Class<T>) : Conver
         if (value != null) {
             value.onBeforeOursToTheirs()
             this.getCopperFields(ourType, this.getMappedContextType(ourType, contextType)).forEach {
-                val fieldValue = it.field.get(value)
-                val fieldType = fieldValue?.javaClass ?: it.field.type
+                try {
+                    val fieldValue = it.field.get(value)
+                    val fieldType = fieldValue?.javaClass ?: it.field.type
 
-                @Suppress("UNCHECKED_CAST")
-                val typeMapper = it.typeMapper as CopperTypeMapper<CopperConvertable, CopperConvertable>?
+                    @Suppress("UNCHECKED_CAST")
+                    val typeMapper = it.typeMapper as CopperTypeMapper<CopperConvertable, CopperConvertable>?
 
-                val mappedType = typeMapper?.mapType(value, fieldType) ?: fieldType
-                val converter = agent.findConverter(mappedType, it.converter, contextType)
-                val convertedValue = if (converter == null) fieldValue else agent.toTheirsWithConverter(fieldValue, mappedType, converter, contextType, it.field)
+                    val mappedType = typeMapper?.mapType(value, fieldType) ?: fieldType
+                    val converter = agent.findConverter(mappedType, it.converter, contextType)
+                    val convertedValue = if (converter == null) fieldValue else agent.toTheirsWithConverter(fieldValue, mappedType, converter, contextType, it.field)
 
-                val writeType = when {
-                    converter == null -> convertedValue?.javaClass ?: mappedType
-                    Map::class.java.isAssignableFrom(converter.theirType) -> Map::class.java
-                    Iterable::class.java.isAssignableFrom(converter.theirType) -> Iterable::class.java
-                    else -> convertedValue?.javaClass ?: converter.theirType
+                    val writeType = when {
+                        converter == null -> convertedValue?.javaClass ?: mappedType
+                        Map::class.java.isAssignableFrom(converter.theirType) -> Map::class.java
+                        Iterable::class.java.isAssignableFrom(converter.theirType) -> Iterable::class.java
+                        else -> convertedValue?.javaClass ?: converter.theirType
+                    }
+
+                    this.setValue(instance, it.name, convertedValue, this.getNonPrimitiveType(writeType))
+                } catch (ex: Exception) {
+                    throw CopperFieldException(it.field, contextType, "An error occurred while converting toTheirs.", ex)
                 }
-
-                this.setValue(instance, it.name, convertedValue, this.getNonPrimitiveType(writeType))
             }
             value.onAfterOursToTheirs()
         }
@@ -70,29 +75,33 @@ abstract class CopperConvertableConverter<T : Any>(theirType: Class<T>) : Conver
         // If the value is null, we keep the default values so there is nothing to do here.
         if (value != null) {
             this.getCopperFields(ourType, this.getMappedContextType(ourType, contextType)).forEach {
-                val fieldType = it.field.type
+                try {
+                    val fieldType = it.field.type
 
-                @Suppress("UNCHECKED_CAST")
-                val typeMapper = it.typeMapper as CopperTypeMapper<CopperConvertable, CopperConvertable>?
+                    @Suppress("UNCHECKED_CAST")
+                    val typeMapper = it.typeMapper as CopperTypeMapper<CopperConvertable, CopperConvertable>?
 
-                val mappedType = typeMapper?.mapType(instance, fieldType) ?: fieldType
-                val converter = agent.findConverter(mappedType, it.converter, contextType)
+                    val mappedType = typeMapper?.mapType(instance, fieldType) ?: fieldType
+                    val converter = agent.findConverter(mappedType, it.converter, contextType)
 
-                val readType = when {
-                    converter == null -> mappedType
-                    Map::class.java.isAssignableFrom(converter.theirType) -> Map::class.java
-                    Iterable::class.java.isAssignableFrom(converter.theirType) -> Iterable::class.java
-                    else -> converter.theirType
+                    val readType = when {
+                        converter == null -> mappedType
+                        Map::class.java.isAssignableFrom(converter.theirType) -> Map::class.java
+                        Iterable::class.java.isAssignableFrom(converter.theirType) -> Iterable::class.java
+                        else -> converter.theirType
+                    }
+
+                    val fieldValue = this.getValue(value, it.name, this.getNonPrimitiveType(readType))
+                    val convertedValue = (if (converter == null) {
+                        fieldValue
+                    } else {
+                        agent.toOursWithConverter(fieldValue, mappedType, converter, contextType, it.field)
+                    }) ?: return@forEach
+
+                    it.field.set(instance, convertedValue)
+                } catch (ex: Exception) {
+                    throw CopperFieldException(it.field, contextType, "An error occurred while converting toOurs.", ex)
                 }
-
-                val fieldValue = this.getValue(value, it.name, this.getNonPrimitiveType(readType))
-                val convertedValue = (if (converter == null) {
-                    fieldValue
-                } else {
-                    agent.toOursWithConverter(fieldValue, mappedType, converter, contextType, it.field)
-                }) ?: return@forEach
-
-                it.field.set(instance, convertedValue)
             }
         }
 

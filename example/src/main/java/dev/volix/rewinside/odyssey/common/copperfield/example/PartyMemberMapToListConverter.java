@@ -21,23 +21,23 @@ public class PartyMemberMapToListConverter extends Converter<Map, List> {
 
     @Nullable @Override
     public List toTheirs(@Nullable final Map value, @NotNull final CopperfieldAgent agent, @NotNull final Class<? extends Map> ourType, @NotNull final Class<?> contextType, @Nullable final Field field) {
-        final ArrayList<Object> list = new ArrayList<>();
-        if (value == null) return list;
-        for (final Object object : value.values()) {
-            list.add(agent.toTheirs(object, PartyMember.class, contextType, field));
-        }
-        return list;
+        if (value == null) return new ArrayList<>();
+        return (List) agent.toTheirs(value.values(), List.class, contextType, field);
     }
 
     @Nullable @Override
     public Map toOurs(@Nullable final List value, @NotNull final CopperfieldAgent agent, @NotNull final Class<? extends Map> ourType, @NotNull final Class<?> contextType, @Nullable final Field field) {
         final Map<String, PartyMember> map = new HashMap<>();
-        if (value == null) return null;
-        for (Object object : value) {
-            final PartyMember member = agent.toOurs(object, PartyMember.class, contextType, field);
+
+        final List<PartyMember> members = agent.toOurs(value, List.class, contextType, field);
+        if (members == null) return map;
+
+        for (PartyMember member : members) {
             map.put(member.uuid.toString(), member);
         }
+
         return map;
     }
 
 }
+

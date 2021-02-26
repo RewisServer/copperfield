@@ -15,9 +15,7 @@ import java.lang.reflect.Field
  */
 class MapConverter : Converter<Map<*, *>, Map<*, *>>(Map::class.java, Map::class.java), KeyAware, ValueAware {
 
-    override fun toTheirs(
-        value: Map<*, *>?, agent: CopperfieldAgent, ourType: Class<out Map<*, *>>, contextType: Class<out Any>,
-        field: Field?): Map<*, *> {
+    override fun toTheirs(value: Map<*, *>?, agent: CopperfieldAgent, ourType: Class<out Map<*, *>>, contextType: Class<out Any>, field: Field?): Map<*, *> {
         if (value == null) return mapOf<Any, Any>()
 
         val valueType = this.getValueType(field)

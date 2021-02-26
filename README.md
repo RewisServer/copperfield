@@ -329,7 +329,7 @@ public class TimedPartyEvent implements CopperConvertable {
     private OffsetDateTime at;
 
     private PartyEventType type;
-    
+
     private PartyEvent event;
 
 }
